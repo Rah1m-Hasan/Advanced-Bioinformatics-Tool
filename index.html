@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advanced Bioinformatics Tool</title>
+    <style>
+      /* --- General Styling & Layout --- */
+      :root {
+        --primary-color: #667eea;
+        --secondary-color: #764ba2;
+        --danger-color: #ff6b6b;
+        --success-color: #51cf66;
+        --info-color: #17a2b8;
+        --light-gray: #f8f9fa;
+        --dark-text: #333;
+        --light-text: #fff;
+        --border-color: #ddd;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--secondary-color) 100%
+        );
+        min-height: 100vh;
+        padding: 20px;
+        color: var(--dark-text);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: var(--light-text);
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+      }
+
+      /* --- Typography --- */
+      h1 {
+        text-align: center;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+        font-size: 2.5em;
+      }
+      h3 {
+        color: var(--secondary-color);
+        margin-bottom: 15px;
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 5px;
+      }
+      h4 {
+        color: #555;
+        margin-bottom: 15px;
+        font-size: 1.1em;
+      }
+      .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 30px;
+      }
+
+      /* --- Forms & Inputs --- */
+      .method-selector {
+        margin-bottom: 40px;
+      }
+      label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      select,
+      input[type="text"],
+      input[type="number"],
+      textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+
+      select:focus,
+      input:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+      }
+
+      textarea {
+        min-height: 100px;
+        resize: vertical;
+        font-family: "Courier New", monospace;
+        text-transform: uppercase;
+      }
+
+      .input-section {
+        margin-bottom: 30px;
+      }
+      .params {
+        margin-bottom: 20px;
+      }
+      .input-section,
+      .params {
+        display: grid;
+        gap: 20px;
+      }
+      .input-section {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      }
+      .params {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      }
+
+      /* --- Buttons --- */
+      button {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--secondary-color) 100%
+        );
+        color: var(--light-text);
+        border: none;
+        padding: 15px 30px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        width: 100%;
+        margin-top: 10px;
+      }
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+      button:active:not(:disabled) {
+        transform: translateY(0);
+      }
+      button:disabled {
+        background: #aaa;
+        cursor: not-allowed;
+      }
+
+      .remove-btn {
+        background: var(--danger-color);
+      }
+      .add-seq-btn {
+        background: var(--success-color);
+      }
+      .export-btn {
+        background: #007bff;
+        margin-top: 20px;
+      }
+      .generate-btn {
+        background: var(--info-color);
+      }
+
+      /* --- Random Sequence Generator --- */
+      .random-seq-generator {
+        border: 2px dashed var(--border-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0 30px 0;
+      }
+      .random-seq-controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+      }
+      .random-control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .random-control-group .generate-btn {
+        margin-top: auto;
+      } /* Pushes button to bottom */
+
+      /* --- Sections & Results --- */
+      .method-section {
+        display: none;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+      }
+      .method-section.active {
+        display: block;
+        opacity: 1;
+      }
+      .result-section {
+        margin-top: 30px;
+        padding: 20px;
+        background: var(--light-gray);
+        border-radius: 8px;
+        display: none;
+      }
+      .result-section.visible {
+        display: block;
+      }
+      .matrix-container {
+        overflow-x: auto;
+        margin: 20px 0;
+        padding: 10px;
+        background: var(--light-text);
+        border-radius: 8px;
+      }
+
+      table {
+        border-collapse: collapse;
+        margin: 0 auto;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      th,
+      td {
+        border: 1px solid var(--border-color);
+        padding: 10px;
+        text-align: center;
+        min-width: 45px;
+        height: 45px;
+        transition: background-color 0.2s;
+      }
+      th {
+        background: var(--primary-color);
+        color: var(--light-text);
+        font-weight: 600;
+      }
+      .cell-path {
+        background-color: #a29bfe !important;
+        color: var(--light-text);
+        font-weight: bold;
+      }
+      .cell-source {
+        background-color: #dff9fb !important;
+      }
+
+      .alignment-result {
+        font-family: "Courier New", monospace;
+        background: var(--light-text);
+        padding: 15px;
+        border-radius: 8px;
+        margin: 10px 0;
+        white-space: pre-wrap;
+        word-break: break-all;
+        font-size: 1.1em;
+        line-height: 1.6;
+      }
+      .match-line {
+        color: #888;
+      }
+      .score-display {
+        font-size: 1.2em;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin: 15px 0;
+      }
+
+      /* --- UPGMA Specific --- */
+      .seq-item {
+        display: grid;
+        grid-template-columns: auto 1fr auto 2fr auto;
+        align-items: center;
+        gap: 15px; /* Increased space */
+        margin-bottom: 20px; /* Increased space */
+      }
+      .seq-item label {
+        margin: 0;
+      }
+      .upgma-options {
+        margin: 25px 0;
+        padding: 20px;
+        border: 2px dashed var(--border-color);
+        border-radius: 8px;
+      }
+      .remove-btn {
+        width: auto;
+        margin: 0;
+      }
+      .tree-container,
+      .distance-matrices-container {
+        margin-top: 20px;
+        padding: 20px;
+        background: var(--light-text);
+        border-radius: 8px;
+        text-align: center;
+      }
+      .tree-svg {
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+      }
+      .step-log {
+        text-align: left;
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+        font-family: "Courier New", monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧬 Advanced Bioinformatics Tool</h1>
+      <p class="subtitle">
+        Global Alignment • Local Alignment • UPGMA Tree Building
+      </p>
+      <div class="method-selector">
+        <label for="method">Select Method:</label>
+        <select id="method">
+          <option value="global">Global Alignment (Needleman-Wunsch)</option>
+          <option value="local">Local Alignment (Smith-Waterman)</option>
+          <option value="upgma">UPGMA Tree Building</option>
+        </select>
+      </div>
+
+      <!-- Alignment Section (Global/Local) -->
+      <div id="alignment-section" class="method-section active">
+        <div class="input-section">
+          <div>
+            <label for="seq1">Sequence 1:</label>
+            <textarea id="seq1" placeholder="e.g., GATTACA">GATTACA</textarea>
+          </div>
+          <div>
+            <label for="seq2">Sequence 2:</label>
+            <textarea id="seq2" placeholder="e.g., GTCGACGCA">
+            GTCGACGCA</textarea
+            >
+          </div>
+        </div>
+        <div class="params">
+          <div>
+            <label for="match">Match Score:</label
+            ><input type="number" id="match" value="1" />
+          </div>
+          <div>
+            <label for="mismatch">Mismatch Score:</label
+            ><input type="number" id="mismatch" value="-1" />
+          </div>
+          <div>
+            <label for="gap">Gap Penalty:</label
+            ><input type="number" id="gap" value="-2" />
+          </div>
+        </div>
+        <!-- Random Sequence Generator -->
+        <div class="random-seq-generator">
+          <h4>Random Sequence Generator</h4>
+          <div class="random-seq-controls">
+            <div class="random-control-group">
+              <label for="random-len1">Sequence 1 Length:</label>
+              <input type="number" id="random-len1" value="15" min="1" />
+              <button id="generate-seq1-btn" class="generate-btn">
+                Generate for Sequence 1
+              </button>
+            </div>
+            <div class="random-control-group">
+              <label for="random-len2">Sequence 2 Length:</label>
+              <input type="number" id="random-len2" value="15" min="1" />
+              <button id="generate-seq2-btn" class="generate-btn">
+                Generate for Sequence 2
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button id="compute-alignment-btn">Compute Alignment</button>
+
+        <div id="alignment-results" class="result-section">
+          <h3>Alignment Matrix</h3>
+          <p>Hover over a cell to see its dependencies.</p>
+          <div class="matrix-container" id="matrix-display"></div>
+          <h3>Optimal Alignment</h3>
+          <div class="score-display" id="score-display"></div>
+          <div class="alignment-result" id="alignment-display"></div>
+        </div>
+      </div>
+
+      <!-- UPGMA Section -->
+      <div id="upgma-section" class="method-section">
+        <div id="seq-container">
+          <!-- Sequence items will be added here by JS -->
+        </div>
+        <div class="upgma-options">
+          <label for="upgma-distance-method"
+            >Calculation of Initial Distance Matrix:</label
+          >
+          <select id="upgma-distance-method">
+            <option value="traditional">
+              Traditional Way (Absolute Difference)
+            </option>
+            <option value="equation">
+              Use Equation (Number of Differences / Total Positions)
+            </option>
+          </select>
+        </div>
+        <button class="add-seq-btn" id="add-seq-btn">Add Sequence</button>
+        <button id="build-upgma-btn">Build UPGMA Tree</button>
+        <div id="upgma-results" class="result-section">
+          <h3>UPGMA Clustering Process</h3>
+          <div class="step-log" id="upgma-step-log"></div>
+          <div class="distance-matrices-container" id="distance-matrices"></div>
+          <h3>Phylogenetic Tree</h3>
+          <div class="tree-container" id="tree-display"></div>
+          <button class="export-btn" id="export-svg-btn">
+            Export Tree as SVG
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const app = {
+          elements: {
+            methodSelect: document.getElementById("method"),
+            alignmentSection: document.getElementById("alignment-section"),
+            upgmaSection: document.getElementById("upgma-section"),
+            computeAlignmentBtn: document.getElementById(
+              "compute-alignment-btn"
+            ),
+            buildUpgmaBtn: document.getElementById("build-upgma-btn"),
+            addSeqBtn: document.getElementById("add-seq-btn"),
+            exportSvgBtn: document.getElementById("export-svg-btn"),
+            seq1Input: document.getElementById("seq1"),
+            seq2Input: document.getElementById("seq2"),
+            matchInput: document.getElementById("match"),
+            mismatchInput: document.getElementById("mismatch"),
+            gapInput: document.getElementById("gap"),
+            alignmentResults: document.getElementById("alignment-results"),
+            matrixDisplay: document.getElementById("matrix-display"),
+            scoreDisplay: document.getElementById("score-display"),
+            alignmentDisplay: document.getElementById("alignment-display"),
+            randomLen1Input: document.getElementById("random-len1"),
+            generateSeq1Btn: document.getElementById("generate-seq1-btn"),
+            randomLen2Input: document.getElementById("random-len2"),
+            generateSeq2Btn: document.getElementById("generate-seq2-btn"),
+            seqContainer: document.getElementById("seq-container"),
+            upgmaDistanceMethod: document.getElementById(
+              "upgma-distance-method"
+            ),
+            upgmaResults: document.getElementById("upgma-results"),
+            stepLog: document.getElementById("upgma-step-log"),
+            distanceMatrices: document.getElementById("distance-matrices"),
+            treeDisplay: document.getElementById("tree-display"),
+          },
+          state: { upgmaSeqCount: 0 },
+
+          init() {
+            this.addInitialUpgmaSequences();
+            this.bindEvents();
+          },
+
+          bindEvents() {
+            this.elements.methodSelect.addEventListener(
+              "change",
+              this.handleMethodSwitch.bind(this)
+            );
+            this.elements.computeAlignmentBtn.addEventListener(
+              "click",
+              this.handleAlignment.bind(this)
+            );
+            this.elements.buildUpgmaBtn.addEventListener(
+              "click",
+              this.handleUPGMA.bind(this)
+            );
+            this.elements.addSeqBtn.addEventListener("click", () =>
+              this.addUpgmaSequence()
+            );
+            this.elements.exportSvgBtn.addEventListener(
+              "click",
+              this.exportSVG.bind(this)
+            );
+
+            this.elements.generateSeq1Btn.addEventListener("click", () => {
+              const len = parseInt(this.elements.randomLen1Input.value) || 15;
+              this.elements.seq1Input.value = this.generateRandomSequence(len);
+            });
+            this.elements.generateSeq2Btn.addEventListener("click", () => {
+              const len = parseInt(this.elements.randomLen2Input.value) || 15;
+              this.elements.seq2Input.value = this.generateRandomSequence(len);
+            });
+          },
+
+          handleMethodSwitch() {
+            const method = this.elements.methodSelect.value;
+            this.elements.alignmentSection.classList.toggle(
+              "active",
+              method === "global" || method === "local"
+            );
+            this.elements.upgmaSection.classList.toggle(
+              "active",
+              method === "upgma"
+            );
+          },
+
+          handleAlignment() {
+            const btn = this.elements.computeAlignmentBtn;
+            this.toggleButtonLoading(btn, true);
+            setTimeout(() => {
+              try {
+                const method = this.elements.methodSelect.value;
+                const seq1 = this.elements.seq1Input.value
+                  .toUpperCase()
+                  .replace(/\s/g, "");
+                const seq2 = this.elements.seq2Input.value
+                  .toUpperCase()
+                  .replace(/\s/g, "");
+                if (!seq1 || !seq2) {
+                  alert("Please enter both sequences.");
+                  return;
+                }
+                const result =
+                  method === "global"
+                    ? this.needlemanWunsch(
+                        seq1,
+                        seq2,
+                        parseInt(this.elements.matchInput.value),
+                        parseInt(this.elements.mismatchInput.value),
+                        parseInt(this.elements.gapInput.value)
+                      )
+                    : this.smithWaterman(
+                        seq1,
+                        seq2,
+                        parseInt(this.elements.matchInput.value),
+                        parseInt(this.elements.mismatchInput.value),
+                        parseInt(this.elements.gapInput.value)
+                      );
+                this.displayAlignmentResults(result);
+              } catch (e) {
+                console.error("Alignment Error:", e);
+                alert("An error occurred during alignment.");
+              } finally {
+                this.toggleButtonLoading(btn, false);
+              }
+            }, 50);
+          },
+
+          handleUPGMA() {
+            const btn = this.elements.buildUpgmaBtn;
+            this.toggleButtonLoading(btn, true);
+            setTimeout(() => {
+              try {
+                const sequences = Array.from(
+                  this.elements.seqContainer.querySelectorAll(".upgma-seq")
+                ).map((el) => el.value.toUpperCase().replace(/\s/g, ""));
+                const names = Array.from(
+                  this.elements.seqContainer.querySelectorAll(".upgma-name")
+                ).map((el) => el.value.trim());
+                if (sequences.filter((s) => s).length < 2) {
+                  alert("Please provide at least two sequences for UPGMA.");
+                  return;
+                }
+                const distanceMethod = this.elements.upgmaDistanceMethod.value;
+                const result = this.upgma(sequences, names, distanceMethod);
+                this.displayUPGMAResults(result);
+              } catch (e) {
+                console.error("UPGMA Error:", e);
+                alert("An error occurred during UPGMA tree construction.");
+              } finally {
+                this.toggleButtonLoading(btn, false);
+              }
+            }, 50);
+          },
+
+          needlemanWunsch(seq1, seq2, match, mismatch, gap) {
+            const m = seq1.length,
+              n = seq2.length;
+            const matrix = Array(m + 1)
+              .fill(null)
+              .map(() => Array(n + 1).fill(0));
+            const traceback = Array(m + 1)
+              .fill(null)
+              .map(() => Array(n + 1).fill(null));
+            for (let i = 1; i <= m; i++) {
+              matrix[i][0] = i * gap;
+              traceback[i][0] = "up";
+            }
+            for (let j = 1; j <= n; j++) {
+              matrix[0][j] = j * gap;
+              traceback[0][j] = "left";
+            }
+            for (let i = 1; i <= m; i++) {
+              for (let j = 1; j <= n; j++) {
+                const matchScore =
+                  seq1[i - 1] === seq2[j - 1] ? match : mismatch;
+                const diag = matrix[i - 1][j - 1] + matchScore;
+                const up = matrix[i - 1][j] + gap;
+                const left = matrix[i][j - 1] + gap;
+                matrix[i][j] = Math.max(diag, up, left);
+                if (matrix[i][j] === diag) traceback[i][j] = "diag";
+                else if (matrix[i][j] === up) traceback[i][j] = "up";
+                else traceback[i][j] = "left";
+              }
+            }
+            const { aligned1, aligned2, path } = this.getAlignment(
+              traceback,
+              seq1,
+              seq2,
+              m,
+              n
+            );
+            return {
+              matrix,
+              traceback,
+              score: matrix[m][n],
+              path,
+              aligned1,
+              aligned2,
+              seq1,
+              seq2,
+              type: "Global",
+            };
+          },
+
+          smithWaterman(seq1, seq2, match, mismatch, gap) {
+            const m = seq1.length,
+              n = seq2.length;
+            const matrix = Array(m + 1)
+              .fill(null)
+              .map(() => Array(n + 1).fill(0));
+            const traceback = Array(m + 1)
+              .fill(null)
+              .map(() => Array(n + 1).fill(null));
+            let maxScore = 0,
+              maxI = 0,
+              maxJ = 0;
+            for (let i = 1; i <= m; i++) {
+              for (let j = 1; j <= n; j++) {
+                const matchScore =
+                  seq1[i - 1] === seq2[j - 1] ? match : mismatch;
+                const diag = matrix[i - 1][j - 1] + matchScore;
+                const up = matrix[i - 1][j] + gap;
+                const left = matrix[i][j - 1] + gap;
+                matrix[i][j] = Math.max(0, diag, up, left);
+                if (matrix[i][j] === 0) traceback[i][j] = "stop";
+                else if (matrix[i][j] === diag) traceback[i][j] = "diag";
+                else if (matrix[i][j] === up) traceback[i][j] = "up";
+                else traceback[i][j] = "left";
+                if (matrix[i][j] > maxScore) {
+                  maxScore = matrix[i][j];
+                  maxI = i;
+                  maxJ = j;
+                }
+              }
+            }
+            const { aligned1, aligned2, path } = this.getAlignment(
+              traceback,
+              seq1,
+              seq2,
+              maxI,
+              maxJ,
+              true
+            );
+            return {
+              matrix,
+              traceback,
+              score: maxScore,
+              path,
+              aligned1,
+              aligned2,
+              seq1,
+              seq2,
+              type: "Local",
+            };
+          },
+
+          getAlignment(traceback, seq1, seq2, i, j, isLocal = false) {
+            let aligned1 = "",
+              aligned2 = "";
+            const path = new Set();
+            while (i > 0 || j > 0) {
+              path.add(`${i},${j}`);
+              const direction = traceback[i][j];
+              if (isLocal && direction === "stop") break;
+              if (direction === "diag") {
+                aligned1 = seq1[--i] + aligned1;
+                aligned2 = seq2[--j] + aligned2;
+              } else if (direction === "up") {
+                aligned1 = seq1[--i] + aligned1;
+                aligned2 = "-" + aligned2;
+              } else if (direction === "left") {
+                aligned1 = "-" + aligned1;
+                aligned2 = seq2[--j] + aligned2;
+              } else break;
+            }
+            return { aligned1, aligned2, path };
+          },
+
+          displayAlignmentResults({
+            matrix,
+            traceback,
+            score,
+            path,
+            aligned1,
+            aligned2,
+            seq1,
+            seq2,
+            type,
+          }) {
+            let tableHTML =
+              "<table><thead><tr><th></th><th>-</th>" +
+              [...seq2].map((c) => `<th>${c}</th>`).join("") +
+              "</tr></thead><tbody>";
+            for (let i = 0; i <= seq1.length; i++) {
+              tableHTML += `<tr><th>${i === 0 ? "-" : seq1[i - 1]}</th>`;
+              for (let j = 0; j <= seq2.length; j++) {
+                tableHTML += `<td data-i="${i}" data-j="${j}" class="${
+                  path.has(`${i},${j}`) ? "cell-path" : ""
+                }">${matrix[i][j]}</td>`;
+              }
+              tableHTML += "</tr>";
+            }
+            this.elements.matrixDisplay.innerHTML =
+              tableHTML + "</tbody></table>";
+            this.addMatrixHoverListeners(traceback);
+            this.elements.scoreDisplay.textContent = `${type} Alignment Score: ${score}`;
+            let matchLine = [...aligned1]
+              .map((c, i) =>
+                c === aligned2[i]
+                  ? "|"
+                  : c === "-" || aligned2[i] === "-"
+                  ? " "
+                  : "."
+              )
+              .join("");
+            this.elements.alignmentDisplay.innerHTML = `Seq 1: ${aligned1}<br><span class="match-line">       ${matchLine}</span><br>Seq 2: ${aligned2}`;
+            this.elements.alignmentResults.classList.add("visible");
+          },
+
+          addMatrixHoverListeners(traceback) {
+            this.elements.matrixDisplay
+              .querySelectorAll("td")
+              .forEach((cell) => {
+                cell.addEventListener("mouseover", (e) => {
+                  const i = parseInt(e.target.dataset.i),
+                    j = parseInt(e.target.dataset.j);
+                  if (i === 0 && j === 0) return;
+                  const direction = traceback[i][j];
+                  if (direction === "diag" || direction === "stop")
+                    this.highlightCell(i - 1, j - 1);
+                  if (direction === "up" || direction === "stop")
+                    this.highlightCell(i - 1, j);
+                  if (direction === "left" || direction === "stop")
+                    this.highlightCell(i, j - 1);
+                });
+                cell.addEventListener("mouseout", () =>
+                  this.elements.matrixDisplay
+                    .querySelectorAll(".cell-source")
+                    .forEach((c) => c.classList.remove("cell-source"))
+                );
+              });
+          },
+
+          highlightCell(i, j) {
+            const cell = this.elements.matrixDisplay.querySelector(
+              `[data-i="${i}"][data-j="${j}"]`
+            );
+            if (cell) cell.classList.add("cell-source");
+          },
+
+          addInitialUpgmaSequences() {
+            this.addUpgmaSequence("Human", "GATTACA");
+            this.addUpgmaSequence("Chimp", "GCTTACA");
+            this.addUpgmaSequence("Gorilla", "GATTAGA");
+          },
+
+          addUpgmaSequence(name = "", sequence = "") {
+            this.state.upgmaSeqCount++;
+            const div = document.createElement("div");
+            div.className = "seq-item";
+            div.innerHTML = `
+            <label>Name:</label>
+            <input type="text" class="upgma-name" value="${
+              name || "Seq" + this.state.upgmaSeqCount
+            }">
+            <label>Sequence:</label>
+            <input type="text" class="upgma-seq" value="${
+              sequence || this.generateRandomSequence(8)
+            }">
+            <button class="remove-btn">Remove</button>`;
+            div
+              .querySelector(".remove-btn")
+              .addEventListener("click", (e) =>
+                this.elements.seqContainer.children.length > 2
+                  ? e.currentTarget.parentElement.remove()
+                  : alert("At least two sequences are required.")
+              );
+            this.elements.seqContainer.appendChild(div);
+          },
+
+          upgma(sequences, names, distanceMethod) {
+            const distance = (s1, s2) => {
+              const len = Math.min(s1.length, s2.length);
+              if (len === 0)
+                return distanceMethod === "equation"
+                  ? 0
+                  : Math.max(s1.length, s2.length);
+
+              let diff = 0;
+              for (let i = 0; i < len; i++) {
+                if (s1[i] !== s2[i]) diff++;
+              }
+
+              if (distanceMethod === "equation") {
+                return diff / len;
+              } else {
+                // 'traditional'
+                diff += Math.abs(s1.length - s2.length); // Add length difference
+                return diff;
+              }
+            };
+
+            let clusters = sequences.map((seq, i) => ({
+              label: names[i],
+              members: [seq],
+              height: 0,
+              isLeaf: true,
+            }));
+            const steps = [],
+              matrices = [];
+            while (clusters.length > 1) {
+              const distMatrix = Array(clusters.length)
+                .fill(null)
+                .map(() => Array(clusters.length).fill(Infinity));
+              let minDist = Infinity,
+                minI = -1,
+                minJ = -1;
+              for (let i = 0; i < clusters.length; i++) {
+                for (let j = i + 1; j < clusters.length; j++) {
+                  let totalDist = 0;
+                  clusters[i].members.forEach((m1) =>
+                    clusters[j].members.forEach(
+                      (m2) => (totalDist += distance(m1, m2))
+                    )
+                  );
+                  distMatrix[i][j] = distMatrix[j][i] =
+                    totalDist /
+                    (clusters[i].members.length * clusters[j].members.length);
+                  if (distMatrix[i][j] < minDist) {
+                    minDist = distMatrix[i][j];
+                    minI = i;
+                    minJ = j;
+                  }
+                }
+              }
+              matrices.push({
+                matrix: distMatrix,
+                labels: clusters.map((c) => c.label),
+              });
+              const c1 = clusters[minI],
+                c2 = clusters[minJ];
+              steps.push(
+                `Merging '${c1.label}' and '${
+                  c2.label
+                }' at distance ${minDist.toFixed(2)}.`
+              );
+              const newCluster = {
+                label: `(${c1.label}, ${c2.label})`,
+                members: [...c1.members, ...c2.members],
+                height: minDist / 2,
+                children: [c1, c2],
+                isLeaf: false,
+              };
+              clusters.splice(Math.max(minI, minJ), 1);
+              clusters.splice(Math.min(minI, minJ), 1, newCluster);
+            }
+            //**FIXED**: Return the root node object, not an array containing it.
+            return { tree: clusters[0], steps, matrices };
+          },
+
+          displayUPGMAResults({ tree, steps, matrices }) {
+            this.elements.stepLog.innerHTML = steps
+              .map((step, i) => `<b>Step ${i + 1}:</b> ${step}`)
+              .join("<br>");
+            this.elements.distanceMatrices.innerHTML = matrices
+              .map((data, i) => {
+                let html = `<h4>${
+                  i === 0 ? "Initial" : "Step " + i
+                } Distance Matrix</h4><table><thead><tr><th></th>${data.labels
+                  .map((l) => `<th>${l}</th>`)
+                  .join("")}</tr></thead><tbody>`;
+                data.matrix.forEach((row, r) => {
+                  html += `<tr><th>${data.labels[r]}</th>${row
+                    .map(
+                      (cell) =>
+                        `<td>${cell === Infinity ? "-" : cell.toFixed(2)}</td>`
+                    )
+                    .join("")}</tr>`;
+                });
+                return html + "</tbody></table>";
+              })
+              .join("");
+            this.drawUPGMATree(tree);
+            this.elements.upgmaResults.classList.add("visible");
+          },
+
+          drawUPGMATree(tree) {
+            if (!tree) return; // Add a guard clause in case the tree is not built
+            const width = 800,
+              height = 500,
+              padding = 60,
+              labelAreaWidth = 150;
+            let leafCount = 0;
+            const numLeaves = this.countLeaves(tree);
+
+            const assignY = (node) => {
+              if (node.isLeaf) {
+                node.y =
+                  (leafCount++ * (height - padding * 2)) / (numLeaves - 1) +
+                  padding;
+              } else {
+                node.children.forEach(assignY);
+                // **FIXED**: Correctly average the Y positions of the two children
+                node.y = (node.children[0].y + node.children[1].y) / 2;
+              }
+            };
+
+            const assignX = (node) => {
+              const maxH = tree.height || 1;
+              node.x =
+                (width - padding - labelAreaWidth) * (1 - node.height / maxH) +
+                padding;
+              if (!node.isLeaf) node.children.forEach(assignX);
+            };
+
+            assignY(tree);
+            assignX(tree);
+
+            let svg = `<svg class="tree-svg" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`;
+
+            const drawLinesAndLabels = (node) => {
+              if (node.isLeaf) {
+                svg += `<text x="${node.x + 8}" y="${
+                  node.y
+                }" dy=".3em" font-size="14" fill="#333">${node.label}</text>`;
+              } else {
+                const [c1, c2] = node.children;
+                svg += `<line x1="${node.x}" y1="${c1.y}" x2="${node.x}" y2="${c2.y}" stroke="#aaa" stroke-width="2"/>`;
+                svg += `<line x1="${node.x}" y1="${c1.y}" x2="${c1.x}" y2="${c1.y}" stroke="#333" stroke-width="2"/>`;
+                svg += `<line x1="${node.x}" y1="${c2.y}" x2="${c2.x}" y2="${c2.y}" stroke="#333" stroke-width="2"/>`;
+                svg += `<text x="${node.x}" y="${
+                  node.y - 8
+                }" font-size="10" fill="var(--secondary-color)" text-anchor="middle">${node.height.toFixed(
+                  2
+                )}</text>`;
+                node.children.forEach(drawLinesAndLabels);
+              }
+            };
+            drawLinesAndLabels(tree);
+            this.elements.treeDisplay.innerHTML = svg + `</svg>`;
+          },
+
+          countLeaves: (node) => {
+            if (!node) return 0;
+            return node.isLeaf
+              ? 1
+              : node.children.reduce(
+                  (sum, child) => sum + app.countLeaves(child),
+                  0
+                );
+          },
+
+          exportSVG() {
+            const svgEl = this.elements.treeDisplay.querySelector("svg");
+            if (!svgEl) {
+              alert("No tree available to export.");
+              return;
+            }
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(
+              new Blob([new XMLSerializer().serializeToString(svgEl)], {
+                type: "image/svg+xml;charset=utf-8",
+              })
+            );
+            link.download = "upgma_tree.svg";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          },
+
+          generateRandomSequence(length = 15) {
+            const chars = "ATCG";
+            return Array.from({ length }, () =>
+              chars.charAt(Math.floor(Math.random() * chars.length))
+            ).join("");
+          },
+
+          toggleButtonLoading(button, isLoading) {
+            if (isLoading) {
+              button.disabled = true;
+              button.dataset.originalText = button.textContent;
+              button.textContent = "Computing...";
+            } else {
+              button.disabled = false;
+              button.textContent = button.dataset.originalText;
+            }
+          },
+        };
+
+        app.init();
+      });
+    </script>
+  </body>
+</html>
