@@ -78,6 +78,21 @@
         display: block;
         margin-bottom: 8px;
       }
+      .label-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .label-container label {
+        margin-bottom: 0;
+      }
+      .align-select {
+        width: auto;
+        padding: 5px 8px;
+        font-size: 14px;
+        margin-left: 10px;
+      }
 
       select,
       input[type="text"],
@@ -209,7 +224,8 @@
       .result-section.visible {
         display: block;
       }
-      .matrix-container {
+      .matrix-container,
+      .distance-matrices-container {
         overflow-x: auto;
         margin: 20px 0;
         padding: 10px;
@@ -227,22 +243,58 @@
         border: 1px solid var(--border-color);
         padding: 10px;
         text-align: center;
-        min-width: 45px;
-        height: 45px;
+        min-width: 55px;
+        height: 55px;
         transition: background-color 0.2s;
+        position: relative;
       }
       th {
         background: var(--primary-color);
         color: var(--light-text);
         font-weight: 600;
       }
+      td {
+        cursor: help;
+      }
       .cell-path {
         background-color: #a29bfe !important;
         color: var(--light-text);
         font-weight: bold;
       }
+      /* MODIFIED: Changed hover color for better visibility */
       .cell-source {
-        background-color: #dff9fb !important;
+        background-color: #fffbdd !important; /* A light yellow */
+        color: #111 !important; /* Force text to be dark for readability */
+      }
+      .cell-source .trace-arrow {
+        color: #111 !important; /* Ensure arrows are also dark */
+      }
+
+      /* --- Organized Arrow Styles --- */
+      .trace-arrow {
+        position: absolute;
+        font-size: 1.2em;
+        color: #333;
+        font-weight: bold;
+        line-height: 1;
+        pointer-events: none;
+      }
+      .arrow-diag {
+        top: 3px;
+        left: 3px;
+      }
+      .arrow-up {
+        top: 3px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .arrow-left {
+        top: 50%;
+        left: 3px;
+        transform: translateY(-50%);
+      }
+      .cell-path .trace-arrow {
+        color: var(--light-text);
       }
 
       .alignment-result {
@@ -271,8 +323,8 @@
         display: grid;
         grid-template-columns: auto 1fr auto 2fr auto;
         align-items: center;
-        gap: 15px; /* Increased space */
-        margin-bottom: 20px; /* Increased space */
+        gap: 15px;
+        margin-bottom: 20px;
       }
       .seq-item label {
         margin: 0;
@@ -287,17 +339,19 @@
         width: auto;
         margin: 0;
       }
-      .tree-container,
-      .distance-matrices-container {
+      .tree-container {
         margin-top: 20px;
         padding: 20px;
         background: var(--light-text);
         border-radius: 8px;
         text-align: center;
+        overflow-x: auto;
       }
       .tree-svg {
         border: 2px solid var(--border-color);
         border-radius: 8px;
+        width: 100%;
+        height: auto;
       }
       .step-log {
         text-align: left;
@@ -306,6 +360,102 @@
         border-radius: 8px;
         margin-top: 20px;
         font-family: "Courier New", monospace;
+      }
+
+      /* --- Calculation Tooltip --- */
+      .calc-tooltip {
+        display: none;
+        position: absolute;
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px;
+        border: 1px solid #fff;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        font-size: 0.9em;
+        width: auto;
+        max-width: 500px;
+      }
+      .calc-tooltip table {
+        width: 100%;
+        border-collapse: collapse;
+        box-shadow: none;
+      }
+      .calc-tooltip th,
+      .calc-tooltip td {
+        border: 1px solid #465d77;
+        padding: 8px;
+        text-align: left;
+        min-width: auto;
+        height: auto;
+        color: white;
+      }
+      .calc-tooltip th {
+        background: none;
+        font-weight: bold;
+        width: 40%;
+      }
+      .calc-tooltip .winning-score {
+        font-weight: bold;
+        color: #51cf66; /* success color */
+      }
+      .calc-tooltip .detail-text,
+      .calc-tooltip .upgma-calc-detail {
+        font-style: italic;
+        font-size: 0.9em;
+        color: #bdc3c7;
+      }
+      .calc-tooltip h4 {
+        color: var(--light-text);
+        margin-bottom: 10px;
+        border-bottom: 1px solid #465d77;
+        padding-bottom: 5px;
+      }
+
+      /* --- Signature --- */
+      .signature {
+        position: fixed;
+        bottom: 10px;
+        right: 15px;
+        font-size: 12px;
+        color: #fff;
+        opacity: 0.7;
+        font-family: "Courier New", monospace;
+        z-index: 1001;
+      }
+
+      /* --- Responsive Design --- */
+      @media (max-width: 768px) {
+        body {
+          padding: 10px;
+        }
+        .container {
+          padding: 20px;
+        }
+        h1 {
+          font-size: 2em;
+        }
+        .input-section,
+        .params,
+        .random-seq-controls {
+          grid-template-columns: 1fr;
+        }
+        .seq-item {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+        .seq-item label {
+          margin-bottom: 0;
+          margin-top: 10px;
+        }
+        .seq-item label:first-of-type {
+          margin-top: 0;
+        }
+        .remove-btn {
+          width: 100%;
+          margin-top: 10px;
+        }
       }
     </style>
   </head>
@@ -328,13 +478,25 @@
       <div id="alignment-section" class="method-section active">
         <div class="input-section">
           <div>
-            <label for="seq1">Sequence 1:</label>
+            <div class="label-container">
+              <label for="seq1">Sequence 1:</label>
+              <select id="seq1-align" class="align-select">
+                <option value="row" selected>Align to Row</option>
+                <option value="col">Align to Column</option>
+              </select>
+            </div>
             <textarea id="seq1" placeholder="e.g., GATTACA">GATTACA</textarea>
           </div>
           <div>
-            <label for="seq2">Sequence 2:</label>
+            <div class="label-container">
+              <label for="seq2">Sequence 2:</label>
+              <select id="seq2-align" class="align-select">
+                <option value="row">Align to Row</option>
+                <option value="col" selected>Align to Column</option>
+              </select>
+            </div>
             <textarea id="seq2" placeholder="e.g., GTCGACGCA">
-            GTCGACGCA</textarea
+GTCGACGCA</textarea
             >
           </div>
         </div>
@@ -377,7 +539,7 @@
 
         <div id="alignment-results" class="result-section">
           <h3>Alignment Matrix</h3>
-          <p>Hover over a cell to see its dependencies.</p>
+          <p>Click on a cell to see its calculation details.</p>
           <div class="matrix-container" id="matrix-display"></div>
           <h3>Optimal Alignment</h3>
           <div class="score-display" id="score-display"></div>
@@ -388,7 +550,7 @@
       <!-- UPGMA Section -->
       <div id="upgma-section" class="method-section">
         <div id="seq-container">
-          <!-- Sequence items will be added here by JS -->
+          <!-- Initial sequences will be added here by JS -->
         </div>
         <div class="upgma-options">
           <label for="upgma-distance-method"
@@ -416,7 +578,10 @@
           </button>
         </div>
       </div>
+      <!-- Calculation Tooltip -->
+      <div id="calc-tooltip" class="calc-tooltip"></div>
     </div>
+    <div class="signature">Made by Rahim</div>
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
@@ -433,6 +598,8 @@
             exportSvgBtn: document.getElementById("export-svg-btn"),
             seq1Input: document.getElementById("seq1"),
             seq2Input: document.getElementById("seq2"),
+            seq1Align: document.getElementById("seq1-align"),
+            seq2Align: document.getElementById("seq2-align"),
             matchInput: document.getElementById("match"),
             mismatchInput: document.getElementById("mismatch"),
             gapInput: document.getElementById("gap"),
@@ -452,8 +619,13 @@
             stepLog: document.getElementById("upgma-step-log"),
             distanceMatrices: document.getElementById("distance-matrices"),
             treeDisplay: document.getElementById("tree-display"),
+            calcTooltip: document.getElementById("calc-tooltip"),
           },
-          state: { upgmaSeqCount: 0 },
+          state: {
+            upgmaSeqCount: 0,
+            lastAlignmentResult: null,
+            lastUPGMAResult: null,
+          },
 
           init() {
             this.addInitialUpgmaSequences();
@@ -480,6 +652,23 @@
               "click",
               this.exportSVG.bind(this)
             );
+            this.elements.seq1Align.addEventListener(
+              "change",
+              this.handleAlignSwitch.bind(this)
+            );
+            this.elements.seq2Align.addEventListener(
+              "change",
+              this.handleAlignSwitch.bind(this)
+            );
+
+            document.addEventListener("click", (e) => {
+              if (
+                !e.target.closest("td") &&
+                this.elements.calcTooltip.style.display === "block"
+              ) {
+                this.elements.calcTooltip.style.display = "none";
+              }
+            });
 
             this.elements.generateSeq1Btn.addEventListener("click", () => {
               const len = parseInt(this.elements.randomLen1Input.value) || 15;
@@ -489,6 +678,20 @@
               const len = parseInt(this.elements.randomLen2Input.value) || 15;
               this.elements.seq2Input.value = this.generateRandomSequence(len);
             });
+          },
+
+          handleAlignSwitch(event) {
+            const changedSelect = event.target;
+            const otherSelect =
+              changedSelect === this.elements.seq1Align
+                ? this.elements.seq2Align
+                : this.elements.seq1Align;
+
+            if (changedSelect.value === "row") {
+              otherSelect.value = "col";
+            } else {
+              otherSelect.value = "row";
+            }
           },
 
           handleMethodSwitch() {
@@ -515,26 +718,31 @@
                 const seq2 = this.elements.seq2Input.value
                   .toUpperCase()
                   .replace(/\s/g, "");
-                if (!seq1 || !seq2) {
+
+                const seq1IsRow = this.elements.seq1Align.value === "row";
+                const seq_v = seq1IsRow ? seq1 : seq2;
+                const seq_h = seq1IsRow ? seq2 : seq1;
+
+                if (!seq_v || !seq_h) {
                   alert("Please enter both sequences.");
                   return;
                 }
+
+                const match = parseInt(this.elements.matchInput.value);
+                const mismatch = parseInt(this.elements.mismatchInput.value);
+                const gap = parseInt(this.elements.gapInput.value);
+
                 const result =
                   method === "global"
-                    ? this.needlemanWunsch(
-                        seq1,
-                        seq2,
-                        parseInt(this.elements.matchInput.value),
-                        parseInt(this.elements.mismatchInput.value),
-                        parseInt(this.elements.gapInput.value)
-                      )
-                    : this.smithWaterman(
-                        seq1,
-                        seq2,
-                        parseInt(this.elements.matchInput.value),
-                        parseInt(this.elements.mismatchInput.value),
-                        parseInt(this.elements.gapInput.value)
-                      );
+                    ? this.needlemanWunsch(seq_v, seq_h, match, mismatch, gap)
+                    : this.smithWaterman(seq_v, seq_h, match, mismatch, gap);
+
+                result.seq_v = seq_v;
+                result.seq_h = seq_h;
+                result.seq1IsRow = seq1IsRow;
+                result.params = { match, mismatch, gap };
+
+                this.state.lastAlignmentResult = result;
                 this.displayAlignmentResults(result);
               } catch (e) {
                 console.error("Alignment Error:", e);
@@ -562,6 +770,10 @@
                 }
                 const distanceMethod = this.elements.upgmaDistanceMethod.value;
                 const result = this.upgma(sequences, names, distanceMethod);
+
+                result.distanceMethod = distanceMethod;
+                this.state.lastUPGMAResult = result;
+
                 this.displayUPGMAResults(result);
               } catch (e) {
                 console.error("UPGMA Error:", e);
@@ -572,9 +784,9 @@
             }, 50);
           },
 
-          needlemanWunsch(seq1, seq2, match, mismatch, gap) {
-            const m = seq1.length,
-              n = seq2.length;
+          needlemanWunsch(seq_v, seq_h, match, mismatch, gap) {
+            const m = seq_v.length,
+              n = seq_h.length;
             const matrix = Array(m + 1)
               .fill(null)
               .map(() => Array(n + 1).fill(0));
@@ -583,29 +795,33 @@
               .map(() => Array(n + 1).fill(null));
             for (let i = 1; i <= m; i++) {
               matrix[i][0] = i * gap;
-              traceback[i][0] = "up";
+              traceback[i][0] = ["up"];
             }
             for (let j = 1; j <= n; j++) {
               matrix[0][j] = j * gap;
-              traceback[0][j] = "left";
+              traceback[0][j] = ["left"];
             }
             for (let i = 1; i <= m; i++) {
               for (let j = 1; j <= n; j++) {
                 const matchScore =
-                  seq1[i - 1] === seq2[j - 1] ? match : mismatch;
+                  seq_v[i - 1] === seq_h[j - 1] ? match : mismatch;
                 const diag = matrix[i - 1][j - 1] + matchScore;
                 const up = matrix[i - 1][j] + gap;
                 const left = matrix[i][j - 1] + gap;
-                matrix[i][j] = Math.max(diag, up, left);
-                if (matrix[i][j] === diag) traceback[i][j] = "diag";
-                else if (matrix[i][j] === up) traceback[i][j] = "up";
-                else traceback[i][j] = "left";
+
+                const maxScore = Math.max(diag, up, left);
+                matrix[i][j] = maxScore;
+
+                traceback[i][j] = [];
+                if (maxScore === diag) traceback[i][j].push("diag");
+                if (maxScore === up) traceback[i][j].push("up");
+                if (maxScore === left) traceback[i][j].push("left");
               }
             }
-            const { aligned1, aligned2, path } = this.getAlignment(
+            const { aligned_v, aligned_h, path } = this.getAlignment(
               traceback,
-              seq1,
-              seq2,
+              seq_v,
+              seq_h,
               m,
               n
             );
@@ -614,17 +830,15 @@
               traceback,
               score: matrix[m][n],
               path,
-              aligned1,
-              aligned2,
-              seq1,
-              seq2,
+              aligned_v,
+              aligned_h,
               type: "Global",
             };
           },
 
-          smithWaterman(seq1, seq2, match, mismatch, gap) {
-            const m = seq1.length,
-              n = seq2.length;
+          smithWaterman(seq_v, seq_h, match, mismatch, gap) {
+            const m = seq_v.length,
+              n = seq_h.length;
             const matrix = Array(m + 1)
               .fill(null)
               .map(() => Array(n + 1).fill(0));
@@ -637,15 +851,23 @@
             for (let i = 1; i <= m; i++) {
               for (let j = 1; j <= n; j++) {
                 const matchScore =
-                  seq1[i - 1] === seq2[j - 1] ? match : mismatch;
+                  seq_v[i - 1] === seq_h[j - 1] ? match : mismatch;
                 const diag = matrix[i - 1][j - 1] + matchScore;
                 const up = matrix[i - 1][j] + gap;
                 const left = matrix[i][j - 1] + gap;
-                matrix[i][j] = Math.max(0, diag, up, left);
-                if (matrix[i][j] === 0) traceback[i][j] = "stop";
-                else if (matrix[i][j] === diag) traceback[i][j] = "diag";
-                else if (matrix[i][j] === up) traceback[i][j] = "up";
-                else traceback[i][j] = "left";
+
+                const currentMax = Math.max(0, diag, up, left);
+                matrix[i][j] = currentMax;
+
+                traceback[i][j] = [];
+                if (currentMax === 0) {
+                  traceback[i][j].push("stop");
+                } else {
+                  if (currentMax === diag) traceback[i][j].push("diag");
+                  if (currentMax === up) traceback[i][j].push("up");
+                  if (currentMax === left) traceback[i][j].push("left");
+                }
+
                 if (matrix[i][j] > maxScore) {
                   maxScore = matrix[i][j];
                   maxI = i;
@@ -653,10 +875,10 @@
                 }
               }
             }
-            const { aligned1, aligned2, path } = this.getAlignment(
+            const { aligned_v, aligned_h, path } = this.getAlignment(
               traceback,
-              seq1,
-              seq2,
+              seq_v,
+              seq_h,
               maxI,
               maxJ,
               true
@@ -666,99 +888,198 @@
               traceback,
               score: maxScore,
               path,
-              aligned1,
-              aligned2,
-              seq1,
-              seq2,
+              aligned_v,
+              aligned_h,
               type: "Local",
             };
           },
 
-          getAlignment(traceback, seq1, seq2, i, j, isLocal = false) {
-            let aligned1 = "",
-              aligned2 = "";
+          getAlignment(traceback, seq_v, seq_h, i, j, isLocal = false) {
+            let aligned_v = "",
+              aligned_h = "";
             const path = new Set();
             while (i > 0 || j > 0) {
               path.add(`${i},${j}`);
-              const direction = traceback[i][j];
+              const directions = traceback[i][j];
+              if (!directions || directions.length === 0) break;
+
+              const direction = directions.includes("diag")
+                ? "diag"
+                : directions[0];
+
               if (isLocal && direction === "stop") break;
+
               if (direction === "diag") {
-                aligned1 = seq1[--i] + aligned1;
-                aligned2 = seq2[--j] + aligned2;
+                aligned_v = seq_v[--i] + aligned_v;
+                aligned_h = seq_h[--j] + aligned_h;
               } else if (direction === "up") {
-                aligned1 = seq1[--i] + aligned1;
-                aligned2 = "-" + aligned2;
+                aligned_v = seq_v[--i] + aligned_v;
+                aligned_h = "-" + aligned_h;
               } else if (direction === "left") {
-                aligned1 = "-" + aligned1;
-                aligned2 = seq2[--j] + aligned2;
+                aligned_v = "-" + aligned_v;
+                aligned_h = seq_h[--j] + aligned_h;
               } else break;
             }
-            return { aligned1, aligned2, path };
+            return { aligned_v, aligned_h, path };
           },
 
-          displayAlignmentResults({
-            matrix,
-            traceback,
-            score,
-            path,
-            aligned1,
-            aligned2,
-            seq1,
-            seq2,
-            type,
-          }) {
+          displayAlignmentResults(result) {
+            const {
+              matrix,
+              traceback,
+              score,
+              path,
+              aligned_v,
+              aligned_h,
+              seq_v,
+              seq_h,
+              seq1IsRow,
+              type,
+            } = result;
+
             let tableHTML =
               "<table><thead><tr><th></th><th>-</th>" +
-              [...seq2].map((c) => `<th>${c}</th>`).join("") +
+              [...seq_h].map((c) => `<th>${c}</th>`).join("") +
               "</tr></thead><tbody>";
-            for (let i = 0; i <= seq1.length; i++) {
-              tableHTML += `<tr><th>${i === 0 ? "-" : seq1[i - 1]}</th>`;
-              for (let j = 0; j <= seq2.length; j++) {
+            for (let i = 0; i <= seq_v.length; i++) {
+              tableHTML += `<tr><th>${i === 0 ? "-" : seq_v[i - 1]}</th>`;
+              for (let j = 0; j <= seq_h.length; j++) {
+                let arrowHTML = "";
+                if (traceback[i] && traceback[i][j]) {
+                  const directions = traceback[i][j];
+                  if (directions.includes("diag")) {
+                    arrowHTML +=
+                      '<span class="trace-arrow arrow-diag">↖</span>';
+                  }
+                  if (directions.includes("up")) {
+                    arrowHTML += '<span class="trace-arrow arrow-up">↑</span>';
+                  }
+                  if (directions.includes("left")) {
+                    arrowHTML +=
+                      '<span class="trace-arrow arrow-left">←</span>';
+                  }
+                }
+
                 tableHTML += `<td data-i="${i}" data-j="${j}" class="${
                   path.has(`${i},${j}`) ? "cell-path" : ""
-                }">${matrix[i][j]}</td>`;
+                }">${arrowHTML}${matrix[i][j]}</td>`;
               }
               tableHTML += "</tr>";
             }
             this.elements.matrixDisplay.innerHTML =
               tableHTML + "</tbody></table>";
-            this.addMatrixHoverListeners(traceback);
+            this.addMatrixEventListeners();
             this.elements.scoreDisplay.textContent = `${type} Alignment Score: ${score}`;
-            let matchLine = [...aligned1]
+
+            const final_aligned1 = seq1IsRow ? aligned_v : aligned_h;
+            const final_aligned2 = seq1IsRow ? aligned_h : aligned_v;
+
+            let matchLine = [...final_aligned1]
               .map((c, i) =>
-                c === aligned2[i]
+                c === final_aligned2[i]
                   ? "|"
-                  : c === "-" || aligned2[i] === "-"
+                  : c === "-" || final_aligned2[i] === "-"
                   ? " "
                   : "."
               )
               .join("");
-            this.elements.alignmentDisplay.innerHTML = `Seq 1: ${aligned1}<br><span class="match-line">       ${matchLine}</span><br>Seq 2: ${aligned2}`;
+            this.elements.alignmentDisplay.innerHTML = `Seq 1: ${final_aligned1}<br><span class="match-line">       ${matchLine}</span><br>Seq 2: ${final_aligned2}`;
             this.elements.alignmentResults.classList.add("visible");
           },
 
-          addMatrixHoverListeners(traceback) {
+          addMatrixEventListeners() {
             this.elements.matrixDisplay
               .querySelectorAll("td")
               .forEach((cell) => {
                 cell.addEventListener("mouseover", (e) => {
-                  const i = parseInt(e.target.dataset.i),
-                    j = parseInt(e.target.dataset.j);
+                  const i = parseInt(e.currentTarget.dataset.i);
+                  const j = parseInt(e.currentTarget.dataset.j);
                   if (i === 0 && j === 0) return;
-                  const direction = traceback[i][j];
-                  if (direction === "diag" || direction === "stop")
-                    this.highlightCell(i - 1, j - 1);
-                  if (direction === "up" || direction === "stop")
-                    this.highlightCell(i - 1, j);
-                  if (direction === "left" || direction === "stop")
-                    this.highlightCell(i, j - 1);
+                  const { traceback } = this.state.lastAlignmentResult;
+                  const directions = traceback[i] ? traceback[i][j] || [] : [];
+                  directions.forEach((direction) => {
+                    if (direction === "diag" || direction === "stop")
+                      this.highlightCell(i - 1, j - 1);
+                    if (direction === "up" || direction === "stop")
+                      this.highlightCell(i - 1, j);
+                    if (direction === "left" || direction === "stop")
+                      this.highlightCell(i, j - 1);
+                  });
                 });
                 cell.addEventListener("mouseout", () =>
                   this.elements.matrixDisplay
                     .querySelectorAll(".cell-source")
                     .forEach((c) => c.classList.remove("cell-source"))
                 );
+
+                cell.addEventListener("click", (e) => {
+                  const i = parseInt(e.currentTarget.dataset.i);
+                  const j = parseInt(e.currentTarget.dataset.j);
+                  this.showCalculationTooltip(i, j, e);
+                });
               });
+          },
+
+          showCalculationTooltip(i, j, event) {
+            const { matrix, seq_v, seq_h, params, type } =
+              this.state.lastAlignmentResult;
+            if (i === 0 && j === 0) return;
+
+            let tooltipContent = "<table>";
+
+            if (i > 0 && j > 0) {
+              const prevScore = matrix[i - 1][j - 1];
+              const charV = seq_v[i - 1];
+              const charH = seq_h[j - 1];
+              const isMatch = charV === charH;
+              const scoreAdd = isMatch ? params.match : params.mismatch;
+              const total = prevScore + scoreAdd;
+              const reason = isMatch ? "match" : "mismatch";
+              tooltipContent += `
+                    <tr>
+                        <th>Score from Diagonal</th>
+                        <td>${prevScore} + ${scoreAdd} = <b>${total}</b>
+                            <div class="detail-text">(Due to a ${reason} between ${charV} & ${charH})</div>
+                        </td>
+                    </tr>`;
+            }
+            if (i > 0) {
+              const prevScore = matrix[i - 1][j];
+              const total = prevScore + params.gap;
+              tooltipContent += `
+                    <tr>
+                        <th>Score from Upper</th>
+                        <td>${prevScore} + ${params.gap} = <b>${total}</b>
+                            <div class="detail-text">(The Gap score)</div>
+                        </td>
+                    </tr>`;
+            }
+            if (j > 0) {
+              const prevScore = matrix[i][j - 1];
+              const total = prevScore + params.gap;
+              tooltipContent += `
+                    <tr>
+                        <th>Score from Side</th>
+                        <td>${prevScore} + ${params.gap} = <b>${total}</b>
+                             <div class="detail-text">(The Gap score)</div>
+                        </td>
+                    </tr>`;
+            }
+            if (type === "Local") {
+              tooltipContent += `
+                    <tr>
+                        <th>Score from Start</th>
+                        <td><b>0</b> <div class="detail-text">(Min score for Local Alignment)</div></td>
+                    </tr>`;
+            }
+            tooltipContent += `
+                <tr>
+                    <th>Winning (max) score</th>
+                    <td class="winning-score">${matrix[i][j]}</td>
+                </tr>`;
+
+            tooltipContent += "</table>";
+            this.displayTooltip(tooltipContent, event);
           },
 
           highlightCell(i, j) {
@@ -814,8 +1135,7 @@
               if (distanceMethod === "equation") {
                 return diff / len;
               } else {
-                // 'traditional'
-                diff += Math.abs(s1.length - s2.length); // Add length difference
+                diff += Math.abs(s1.length - s2.length);
                 return diff;
               }
             };
@@ -853,10 +1173,14 @@
                   }
                 }
               }
+
+              const clustersCopy = JSON.parse(JSON.stringify(clusters));
               matrices.push({
                 matrix: distMatrix,
                 labels: clusters.map((c) => c.label),
+                clusters: clustersCopy,
               });
+
               const c1 = clusters[minI],
                 c2 = clusters[minJ];
               steps.push(
@@ -874,7 +1198,6 @@
               clusters.splice(Math.max(minI, minJ), 1);
               clusters.splice(Math.min(minI, minJ), 1, newCluster);
             }
-            //**FIXED**: Return the root node object, not an array containing it.
             return { tree: clusters[0], steps, matrices };
           },
 
@@ -885,27 +1208,141 @@
             this.elements.distanceMatrices.innerHTML = matrices
               .map((data, i) => {
                 let html = `<h4>${
-                  i === 0 ? "Initial" : "Step " + i
+                  i === 0 ? "Initial" : "Step " + (i + 1)
                 } Distance Matrix</h4><table><thead><tr><th></th>${data.labels
                   .map((l) => `<th>${l}</th>`)
                   .join("")}</tr></thead><tbody>`;
                 data.matrix.forEach((row, r) => {
-                  html += `<tr><th>${data.labels[r]}</th>${row
-                    .map(
-                      (cell) =>
-                        `<td>${cell === Infinity ? "-" : cell.toFixed(2)}</td>`
-                    )
-                    .join("")}</tr>`;
+                  html += `<tr><th>${data.labels[r]}</th>`;
+                  row.forEach((cell, c) => {
+                    html += `<td data-matrix-idx="${i}" data-row-idx="${r}" data-col-idx="${c}">
+                                ${cell === Infinity ? "-" : cell.toFixed(2)}
+                               </td>`;
+                  });
+                  html += `</tr>`;
                 });
                 return html + "</tbody></table>";
               })
               .join("");
+
+            this.addUPGMAEventListeners();
             this.drawUPGMATree(tree);
             this.elements.upgmaResults.classList.add("visible");
           },
 
+          addUPGMAEventListeners() {
+            this.elements.distanceMatrices
+              .querySelectorAll("td")
+              .forEach((cell) => {
+                cell.addEventListener("click", (e) => {
+                  const matrixIdx = parseInt(e.currentTarget.dataset.matrixIdx);
+                  const rowIdx = parseInt(e.currentTarget.dataset.rowIdx);
+                  const colIdx = parseInt(e.currentTarget.dataset.colIdx);
+                  this.showUPGMACalculationTooltip(
+                    matrixIdx,
+                    rowIdx,
+                    colIdx,
+                    e
+                  );
+                });
+              });
+          },
+
+          showUPGMACalculationTooltip(matrixIdx, rowIdx, colIdx, event) {
+            if (rowIdx === colIdx) {
+              const matrixData = this.state.lastUPGMAResult.matrices[matrixIdx];
+              const cluster = matrixData.clusters[rowIdx];
+              this.displayTooltip(
+                `<h4>Calculation for (${cluster.label}, ${cluster.label})</h4><div>Distance to self is always 0.</div>`,
+                event
+              );
+              return;
+            }
+
+            if (rowIdx > colIdx) {
+              [rowIdx, colIdx] = [colIdx, rowIdx];
+            }
+
+            const { matrices, distanceMethod } = this.state.lastUPGMAResult;
+            const matrixData = matrices[matrixIdx];
+            const cluster1 = matrixData.clusters[rowIdx];
+            const cluster2 = matrixData.clusters[colIdx];
+            const finalValue = matrixData.matrix[rowIdx][colIdx];
+
+            let tooltipContent = `<h4>Calculation for (${cluster1.label}, ${cluster2.label})</h4>`;
+            let details = "";
+            let totalDist = 0;
+            let comparisons = 0;
+
+            cluster1.members.forEach((s1) => {
+              cluster2.members.forEach((s2) => {
+                const len = Math.min(s1.length, s2.length);
+                let diff = 0;
+                if (len > 0) {
+                  for (let i = 0; i < len; i++) {
+                    if (s1[i] !== s2[i]) diff++;
+                  }
+                }
+
+                if (distanceMethod === "equation") {
+                  const dist = len > 0 ? diff / len : 0;
+                  totalDist += dist;
+                  details += `<div>${s1} vs ${s2} &rarr; ${diff}/${len} = ${dist.toFixed(
+                    2
+                  )}</div>`;
+                } else {
+                  const dist = diff + Math.abs(s1.length - s2.length);
+                  totalDist += dist;
+                  details += `<div>${s1} vs ${s2} &rarr; ${dist} differences</div>`;
+                }
+                comparisons++;
+              });
+            });
+
+            tooltipContent += `<div class="upgma-calc-detail"><b>Individual Comparisons:</b>${details}</div>`;
+            tooltipContent += `<hr><div><b>Average Calculation:</b><br>
+                               (${totalDist.toFixed(
+                                 2
+                               )}) / ${comparisons} = <b class="winning-score">${finalValue.toFixed(
+              2
+            )}</b></div>`;
+
+            this.displayTooltip(tooltipContent, event);
+          },
+
+          displayTooltip(content, event) {
+            const tooltip = this.elements.calcTooltip;
+            tooltip.innerHTML = content;
+            tooltip.style.display = "block";
+
+            const rect = event.currentTarget.getBoundingClientRect();
+            let x = rect.left + window.scrollX + rect.width / 2;
+            let y = rect.top + window.scrollY + rect.height;
+
+            tooltip.style.left = "0px";
+            tooltip.style.top = "0px";
+            const tooltipWidth = tooltip.offsetWidth;
+            const tooltipHeight = tooltip.offsetHeight;
+
+            if (x + tooltipWidth / 2 > document.documentElement.clientWidth) {
+              x = document.documentElement.clientWidth - tooltipWidth - 5;
+            } else {
+              x = x - tooltipWidth / 2;
+            }
+
+            if (
+              y + tooltipHeight >
+              document.documentElement.clientHeight + window.scrollY
+            ) {
+              y = rect.top + window.scrollY - tooltipHeight - 5;
+            }
+
+            tooltip.style.left = `${Math.max(5, x)}px`;
+            tooltip.style.top = `${Math.max(5, y)}px`;
+          },
+
           drawUPGMATree(tree) {
-            if (!tree) return; // Add a guard clause in case the tree is not built
+            if (!tree) return;
             const width = 800,
               height = 500,
               padding = 60,
@@ -920,7 +1357,6 @@
                   padding;
               } else {
                 node.children.forEach(assignY);
-                // **FIXED**: Correctly average the Y positions of the two children
                 node.y = (node.children[0].y + node.children[1].y) / 2;
               }
             };
@@ -936,21 +1372,23 @@
             assignY(tree);
             assignX(tree);
 
-            let svg = `<svg class="tree-svg" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`;
+            let svg = `<svg class="tree-svg" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
 
             const drawLinesAndLabels = (node) => {
               if (node.isLeaf) {
                 svg += `<text x="${node.x + 8}" y="${
                   node.y
-                }" dy=".3em" font-size="14" fill="#333">${node.label}</text>`;
+                }" dy=".3em" font-size="14" fill="#333" style="text-anchor: start;">${
+                  node.label
+                }</text>`;
               } else {
                 const [c1, c2] = node.children;
-                svg += `<line x1="${node.x}" y1="${c1.y}" x2="${node.x}" y2="${c2.y}" stroke="#aaa" stroke-width="2"/>`;
-                svg += `<line x1="${node.x}" y1="${c1.y}" x2="${c1.x}" y2="${c1.y}" stroke="#333" stroke-width="2"/>`;
-                svg += `<line x1="${node.x}" y1="${c2.y}" x2="${c2.x}" y2="${c2.y}" stroke="#333" stroke-width="2"/>`;
-                svg += `<text x="${node.x}" y="${
-                  node.y - 8
-                }" font-size="10" fill="var(--secondary-color)" text-anchor="middle">${node.height.toFixed(
+                svg += `<line x1="${node.x}" y1="${c1.y}" x2="${node.x}" y2="${c2.y}" stroke="#555" stroke-width="1"/>`;
+                svg += `<line x1="${node.x}" y1="${c1.y}" x2="${c1.x}" y2="${c1.y}" stroke="#555" stroke-width="1"/>`;
+                svg += `<line x1="${node.x}" y1="${c2.y}" x2="${c2.x}" y2="${c2.y}" stroke="#555" stroke-width="1"/>`;
+                svg += `<text x="${node.x - 4}" y="${
+                  node.y - 4
+                }" font-size="10" fill="var(--secondary-color)" text-anchor="end">${node.height.toFixed(
                   2
                 )}</text>`;
                 node.children.forEach(drawLinesAndLabels);
