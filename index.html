@@ -511,7 +511,20 @@ GTCGACGCA</textarea
           </div>
           <div>
             <label for="gap">Gap Penalty:</label
-            ><input type="number" id="gap" value="-2" />
+            ><input type="number" id="gap" value="-1" />
+          </div>
+          <div>
+            <label for="traceback-priority"
+              >Traceback Priority (for ties):</label
+            >
+            <select id="traceback-priority">
+              <option value="diag-up-left" selected>
+                Diagonal → Up → Left (Standard)
+              </option>
+              <option value="diag-left-up">Diagonal → Left → Up</option>
+              <option value="up-diag-left">Up → Diagonal → Left</option>
+              <option value="left-diag-up">Left → Diagonal → Up</option>
+            </select>
           </div>
         </div>
         <!-- Random Sequence Generator -->
@@ -603,6 +616,7 @@ GTCGACGCA</textarea
             matchInput: document.getElementById("match"),
             mismatchInput: document.getElementById("mismatch"),
             gapInput: document.getElementById("gap"),
+            tracebackPriority: document.getElementById("traceback-priority"), // ADD THIS LINE
             alignmentResults: document.getElementById("alignment-results"),
             matrixDisplay: document.getElementById("matrix-display"),
             scoreDisplay: document.getElementById("score-display"),
@@ -818,12 +832,17 @@ GTCGACGCA</textarea
                 if (maxScore === left) traceback[i][j].push("left");
               }
             }
+            const priority = this.elements.tracebackPriority
+              ? this.elements.tracebackPriority.value
+              : "diag-up-left";
             const { aligned_v, aligned_h, path } = this.getAlignment(
               traceback,
               seq_v,
               seq_h,
               m,
-              n
+              n,
+              false,
+              priority
             );
             return {
               matrix,
@@ -833,6 +852,7 @@ GTCGACGCA</textarea
               aligned_v,
               aligned_h,
               type: "Global",
+              priority: priority, // ADD THIS LINE
             };
           },
 
@@ -868,20 +888,25 @@ GTCGACGCA</textarea
                   if (currentMax === left) traceback[i][j].push("left");
                 }
 
-                if (matrix[i][j] > maxScore) {
+                if (matrix[i][j] >= maxScore) {
+                  // Use >= to find the bottom-most, right-most max score
                   maxScore = matrix[i][j];
                   maxI = i;
                   maxJ = j;
                 }
               }
             }
+            const priority = this.elements.tracebackPriority
+              ? this.elements.tracebackPriority.value
+              : "diag-up-left";
             const { aligned_v, aligned_h, path } = this.getAlignment(
               traceback,
               seq_v,
               seq_h,
               maxI,
               maxJ,
-              true
+              true,
+              priority
             );
             return {
               matrix,
@@ -891,10 +916,19 @@ GTCGACGCA</textarea
               aligned_v,
               aligned_h,
               type: "Local",
+              priority: priority, // ADD THIS LINE
             };
           },
 
-          getAlignment(traceback, seq_v, seq_h, i, j, isLocal = false) {
+          getAlignment(
+            traceback,
+            seq_v,
+            seq_h,
+            i,
+            j,
+            isLocal = false,
+            priority = "diag-up-left"
+          ) {
             let aligned_v = "",
               aligned_h = "";
             const path = new Set();
@@ -902,11 +936,17 @@ GTCGACGCA</textarea
               path.add(`${i},${j}`);
               const directions = traceback[i][j];
               if (!directions || directions.length === 0) break;
+              // Determine direction based on priority
+              let direction;
+              const priorityOrder = priority.split("-");
+              for (const dir of priorityOrder) {
+                if (directions.includes(dir)) {
+                  direction = dir;
+                  break;
+                }
+              }
 
-              const direction = directions.includes("diag")
-                ? "diag"
-                : directions[0];
-
+              if (!direction) direction = directions[0];
               if (isLocal && direction === "stop") break;
 
               if (direction === "diag") {
@@ -947,16 +987,48 @@ GTCGACGCA</textarea
                 let arrowHTML = "";
                 if (traceback[i] && traceback[i][j]) {
                   const directions = traceback[i][j];
+                  const isOnPath = path.has(`${i},${j}`);
+
+                  let takenDirection = null;
+                  if (isOnPath) {
+                    if (
+                      path.has(`${i - 1},${j - 1}`) &&
+                      directions.includes("diag")
+                    ) {
+                      takenDirection = "diag";
+                    } else if (
+                      path.has(`${i - 1},${j}`) &&
+                      directions.includes("up")
+                    ) {
+                      takenDirection = "up";
+                    } else if (
+                      path.has(`${i},${j - 1}`) &&
+                      directions.includes("left")
+                    ) {
+                      takenDirection = "left";
+                    }
+                  }
+
                   if (directions.includes("diag")) {
-                    arrowHTML +=
-                      '<span class="trace-arrow arrow-diag">↖</span>';
+                    const highlight =
+                      takenDirection === "diag"
+                        ? ' style="color: #ff6b6b; font-size: 1.5em; font-weight: bold;"'
+                        : "";
+                    arrowHTML += `<span class="trace-arrow arrow-diag"${highlight}>↖</span>`;
                   }
                   if (directions.includes("up")) {
-                    arrowHTML += '<span class="trace-arrow arrow-up">↑</span>';
+                    const highlight =
+                      takenDirection === "up"
+                        ? ' style="color: #ff6b6b; font-size: 1.5em; font-weight: bold;"'
+                        : "";
+                    arrowHTML += `<span class="trace-arrow arrow-up"${highlight}>↑</span>`;
                   }
                   if (directions.includes("left")) {
-                    arrowHTML +=
-                      '<span class="trace-arrow arrow-left">←</span>';
+                    const highlight =
+                      takenDirection === "left"
+                        ? ' style="color: #ff6b6b; font-size: 1.5em; font-weight: bold;"'
+                        : "";
+                    arrowHTML += `<span class="trace-arrow arrow-left"${highlight}>←</span>`;
                   }
                 }
 
@@ -984,6 +1056,25 @@ GTCGACGCA</textarea
               )
               .join("");
             this.elements.alignmentDisplay.innerHTML = `Seq 1: ${final_aligned1}<br><span class="match-line">       ${matchLine}</span><br>Seq 2: ${final_aligned2}`;
+
+            // Add this:
+            const pathCoords = Array.from(path)
+              .sort((a, b) => {
+                const [ai, aj] = a.split(",").map(Number);
+                const [bi, bj] = b.split(",").map(Number);
+                return bi + bj - (ai + aj);
+              })
+              .join(" → ");
+
+            this.elements.alignmentDisplay.innerHTML += `
+            <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 8px; font-family: 'Courier New', monospace; word-break: break-all;">
+                <b>Traceback Priority Used:</b> ${
+                  result.priority || "diag-up-left"
+                }<br>
+                <b>Path Coordinates:</b> ${pathCoords}<br>
+                <b>Alignment Score:</b> ${score}
+            </div>`;
+
             this.elements.alignmentResults.classList.add("visible");
           },
 
@@ -1049,7 +1140,7 @@ GTCGACGCA</textarea
               tooltipContent += `
                     <tr>
                         <th>Score from Upper</th>
-                        <td>${prevScore} + ${params.gap} = <b>${total}</b>
+                        <td>${prevScore} + (${params.gap}) = <b>${total}</b>
                             <div class="detail-text">(The Gap score)</div>
                         </td>
                     </tr>`;
@@ -1060,7 +1151,7 @@ GTCGACGCA</textarea
               tooltipContent += `
                     <tr>
                         <th>Score from Side</th>
-                        <td>${prevScore} + ${params.gap} = <b>${total}</b>
+                        <td>${prevScore} + (${params.gap}) = <b>${total}</b>
                              <div class="detail-text">(The Gap score)</div>
                         </td>
                     </tr>`;
