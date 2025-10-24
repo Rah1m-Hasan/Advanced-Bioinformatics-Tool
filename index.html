@@ -84,6 +84,11 @@
         align-items: center;
         margin-bottom: 8px;
       }
+      .label-with-tooltip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
       .label-container label {
         margin-bottom: 0;
       }
@@ -120,6 +125,13 @@
         font-family: "Courier New", monospace;
         text-transform: uppercase;
       }
+      .seq-counter {
+        font-size: 14px;
+        color: #666;
+        text-align: right;
+        margin-top: 4px;
+        height: 1em;
+      }
 
       .input-section {
         margin-bottom: 30px;
@@ -153,20 +165,36 @@
         font-size: 16px;
         font-weight: 600;
         cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: transform 0.15s, box-shadow 0.15s;
         width: 100%;
         margin-top: 10px;
+        position: relative;
+        overflow: hidden;
       }
       button:hover:not(:disabled) {
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
       }
       button:active:not(:disabled) {
-        transform: translateY(0);
+        transform: translateY(0) scale(0.95);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
       }
       button:disabled {
         background: #aaa;
         cursor: not-allowed;
+      }
+      .ripple {
+        position: absolute;
+        border-radius: 50%;
+        transform: scale(0);
+        animation: ripple-animation 0.6s linear;
+        background-color: rgba(255, 255, 255, 0.7);
+      }
+      @keyframes ripple-animation {
+        to {
+          transform: scale(4);
+          opacity: 0;
+        }
       }
 
       .remove-btn {
@@ -187,8 +215,31 @@
       .random-seq-generator {
         border: 2px dashed var(--border-color);
         border-radius: 8px;
-        padding: 20px;
+        padding: 0 20px;
         margin: 20px 0 30px 0;
+      }
+      .random-seq-generator h4 {
+        cursor: pointer;
+        padding: 20px 0;
+        margin: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .toggle-arrow {
+        transition: transform 0.3s ease-in-out;
+      }
+      .random-seq-generator.expanded .toggle-arrow {
+        transform: rotate(180deg);
+      }
+      .generator-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+      }
+      .random-seq-generator.expanded .generator-content {
+        max-height: 500px;
+        padding-bottom: 20px;
       }
       .random-seq-controls {
         display: grid;
@@ -302,13 +353,23 @@
         padding: 15px;
         border-radius: 8px;
         margin: 10px 0;
-        white-space: pre-wrap;
-        word-break: break-all;
+        white-space: pre; /* Use pre for better alignment with spans */
+        overflow-x: auto;
         font-size: 1.1em;
         line-height: 1.6;
       }
+      .alignment-result span {
+        font-weight: bold;
+      }
+      .match {
+        color: var(--success-color);
+      }
+      .mismatch {
+        color: var(--danger-color);
+      }
       .match-line {
-        color: #888;
+        color: #aaa;
+        font-family: monospace;
       }
       .score-display {
         font-size: 1.2em;
@@ -317,29 +378,48 @@
         margin: 15px 0;
       }
 
+      /* --- Pill Style Toggle Buttons for Alignment --- */
       .alignment-switcher {
         margin: 20px 0;
         padding: 15px;
         background: #f1f3f5;
         border-radius: 8px;
         display: flex;
-        gap: 15px;
+        gap: 10px;
         align-items: center;
         flex-wrap: wrap;
       }
       .alignment-switcher h4 {
-        margin: 0;
+        margin: 0 10px 0 0;
         padding: 0;
         color: #333;
         font-size: 1em;
         border: none;
       }
-      .alignment-switcher label {
-        font-weight: normal;
-        cursor: pointer;
-        margin-right: 10px;
-        display: inline-block;
+      .alignment-switcher input[type="radio"] {
+        display: none;
       }
+      .alignment-switcher label {
+        font-weight: 600;
+        cursor: pointer;
+        padding: 8px 18px;
+        border-radius: 20px;
+        background-color: #fff;
+        color: var(--dark-text);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+      }
+      .alignment-switcher input[type="radio"]:checked + label {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--secondary-color) 100%
+        );
+        color: var(--light-text);
+        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
+        transform: translateY(-1px);
+      }
+
       .alignment-result-item {
         margin-top: 20px;
         padding-top: 20px;
@@ -378,7 +458,7 @@
       .tree-container {
         margin-top: 20px;
         padding: 20px;
-        background: var(--light-text);
+        background: var(--light-gray);
         border-radius: 8px;
         text-align: center;
         overflow-x: auto;
@@ -398,7 +478,46 @@
         font-family: "Courier New", monospace;
       }
 
-      /* --- Calculation Tooltip --- */
+      /* --- Help & Calculation Tooltips --- */
+      .help-tooltip {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+        text-align: center;
+        border-radius: 50%;
+        background: var(--info-color);
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: help;
+        position: relative;
+        user-select: none;
+      }
+      .help-tooltip .tooltip-text {
+        visibility: hidden;
+        width: 300px;
+        background-color: #2c3e50;
+        color: #fff;
+        text-align: left;
+        border-radius: 6px;
+        padding: 10px;
+        position: absolute;
+        z-index: 100;
+        bottom: 150%;
+        left: 50%;
+        margin-left: -150px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 14px;
+        font-weight: normal;
+        line-height: 1.4;
+      }
+      .help-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+      }
+
       .calc-tooltip {
         display: none;
         position: absolute;
@@ -522,6 +641,7 @@
               </select>
             </div>
             <textarea id="seq1" placeholder="e.g., GATTACA">GATTACA</textarea>
+            <div id="seq1-counter" class="seq-counter"></div>
           </div>
           <div>
             <div class="label-container">
@@ -534,6 +654,7 @@
             <textarea id="seq2" placeholder="e.g., GTCGACGCA">
 GTCGACGCA</textarea
             >
+            <div id="seq2-counter" class="seq-counter"></div>
           </div>
         </div>
         <div class="params">
@@ -550,9 +671,17 @@ GTCGACGCA</textarea
             ><input type="number" id="gap" value="-1" />
           </div>
           <div>
-            <label for="traceback-priority"
-              >Traceback Priority (for ties):</label
-            >
+            <div class="label-with-tooltip">
+              <label for="traceback-priority">Traceback Priority:</label>
+              <div class="help-tooltip">
+                ?
+                <span class="tooltip-text"
+                  >Determines which path to follow when multiple alignment paths
+                  have the same score. 'Diagonal' is prioritized for
+                  matches/mismatches, 'Up' and 'Left' correspond to gaps.</span
+                >
+              </div>
+            </div>
             <select id="traceback-priority">
               <option value="diag-up-left" selected>
                 Diagonal → Up → Left (Standard)
@@ -565,21 +694,23 @@ GTCGACGCA</textarea
         </div>
         <!-- Random Sequence Generator -->
         <div class="random-seq-generator">
-          <h4>Random Sequence Generator</h4>
-          <div class="random-seq-controls">
-            <div class="random-control-group">
-              <label for="random-len1">Sequence 1 Length:</label>
-              <input type="number" id="random-len1" value="15" min="1" />
-              <button id="generate-seq1-btn" class="generate-btn">
-                Generate for Sequence 1
-              </button>
-            </div>
-            <div class="random-control-group">
-              <label for="random-len2">Sequence 2 Length:</label>
-              <input type="number" id="random-len2" value="15" min="1" />
-              <button id="generate-seq2-btn" class="generate-btn">
-                Generate for Sequence 2
-              </button>
+          <h4>Random Sequence Generator <span class="toggle-arrow">▼</span></h4>
+          <div class="generator-content">
+            <div class="random-seq-controls">
+              <div class="random-control-group">
+                <label for="random-len1">Sequence 1 Length:</label>
+                <input type="number" id="random-len1" value="15" min="1" />
+                <button id="generate-seq1-btn" class="generate-btn">
+                  Generate for Sequence 1
+                </button>
+              </div>
+              <div class="random-control-group">
+                <label for="random-len2">Sequence 2 Length:</label>
+                <input type="number" id="random-len2" value="15" min="1" />
+                <button id="generate-seq2-btn" class="generate-btn">
+                  Generate for Sequence 2
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -602,9 +733,23 @@ GTCGACGCA</textarea
           <!-- Initial sequences will be added here by JS -->
         </div>
         <div class="upgma-options">
-          <label for="upgma-distance-method"
-            >Calculation of Initial Distance Matrix:</label
-          >
+          <div class="label-with-tooltip">
+            <label for="upgma-distance-method"
+              >Initial Distance Matrix Calculation:</label
+            >
+            <div class="help-tooltip">
+              ?
+              <span class="tooltip-text"
+                ><b>Traditional Way:</b> Counts the total number of differing
+                positions (absolute difference).<br /><br /><b
+                  >Equation Method:</b
+                >
+                Calculates the proportion of differences (number of differences
+                / total aligned positions).</span
+              >
+            </div>
+          </div>
+
           <select id="upgma-distance-method">
             <option value="traditional">
               Traditional Way (Absolute Difference)
@@ -647,6 +792,8 @@ GTCGACGCA</textarea
             exportSvgBtn: document.getElementById("export-svg-btn"),
             seq1Input: document.getElementById("seq1"),
             seq2Input: document.getElementById("seq2"),
+            seq1Counter: document.getElementById("seq1-counter"),
+            seq2Counter: document.getElementById("seq2-counter"),
             seq1Align: document.getElementById("seq1-align"),
             seq2Align: document.getElementById("seq2-align"),
             matchInput: document.getElementById("match"),
@@ -661,6 +808,8 @@ GTCGACGCA</textarea
             generateSeq1Btn: document.getElementById("generate-seq1-btn"),
             randomLen2Input: document.getElementById("random-len2"),
             generateSeq2Btn: document.getElementById("generate-seq2-btn"),
+            generatorContainer: document.querySelector(".random-seq-generator"),
+            generatorHeader: document.querySelector(".random-seq-generator h4"),
             seqContainer: document.getElementById("seq-container"),
             upgmaDistanceMethod: document.getElementById(
               "upgma-distance-method"
@@ -680,6 +829,7 @@ GTCGACGCA</textarea
           init() {
             this.addInitialUpgmaSequences();
             this.bindEvents();
+            this.updateSeqCounters();
           },
 
           bindEvents() {
@@ -710,7 +860,16 @@ GTCGACGCA</textarea
               "change",
               this.handleAlignSwitch.bind(this)
             );
+            this.elements.seq1Input.addEventListener(
+              "input",
+              this.updateSeqCounters.bind(this)
+            );
+            this.elements.seq2Input.addEventListener(
+              "input",
+              this.updateSeqCounters.bind(this)
+            );
 
+            // Hide tooltip on outside click
             document.addEventListener("click", (e) => {
               if (
                 !e.target.closest("td") &&
@@ -720,14 +879,60 @@ GTCGACGCA</textarea
               }
             });
 
+            // Random sequence generator
             this.elements.generateSeq1Btn.addEventListener("click", () => {
               const len = parseInt(this.elements.randomLen1Input.value) || 15;
               this.elements.seq1Input.value = this.generateRandomSequence(len);
+              this.updateSeqCounters();
             });
             this.elements.generateSeq2Btn.addEventListener("click", () => {
               const len = parseInt(this.elements.randomLen2Input.value) || 15;
               this.elements.seq2Input.value = this.generateRandomSequence(len);
+              this.updateSeqCounters();
             });
+            this.elements.generatorHeader.addEventListener("click", () => {
+              this.elements.generatorContainer.classList.toggle("expanded");
+            });
+
+            // Button ripple effect
+            const buttons = document.querySelectorAll("button");
+            buttons.forEach((button) => {
+              button.addEventListener("click", this.createRipple);
+            });
+          },
+
+          createRipple(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement("span");
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+
+            circle.style.width = circle.style.height = `${diameter}px`;
+            // Calculate position relative to the viewport, then adjust for button's position
+            const buttonRect = button.getBoundingClientRect();
+            circle.style.left = `${event.clientX - buttonRect.left - radius}px`;
+            circle.style.top = `${event.clientY - buttonRect.top - radius}px`;
+            circle.classList.add("ripple");
+
+            const ripple = button.getElementsByClassName("ripple")[0];
+            if (ripple) {
+              ripple.remove();
+            }
+
+            button.appendChild(circle);
+          },
+
+          updateSeqCounters() {
+            const len1 = this.elements.seq1Input.value.replace(
+              /\s/g,
+              ""
+            ).length;
+            this.elements.seq1Counter.textContent = `Length: ${len1}`;
+            const len2 = this.elements.seq2Input.value.replace(
+              /\s/g,
+              ""
+            ).length;
+            this.elements.seq2Counter.textContent = `Length: ${len2}`;
           },
 
           handleAlignSwitch(event) {
@@ -1079,15 +1284,28 @@ GTCGACGCA</textarea
             alignments.forEach((aln, index) => {
               const final_aligned1 = seq1IsRow ? aln.aligned_v : aln.aligned_h;
               const final_aligned2 = seq1IsRow ? aln.aligned_h : aln.aligned_v;
-              let matchLine = [...final_aligned1]
-                .map((c, i) =>
-                  c === final_aligned2[i]
-                    ? "|"
-                    : c === "-" || final_aligned2[i] === "-"
-                    ? " "
-                    : "."
-                )
-                .join("");
+
+              let colored_seq1 = "";
+              let colored_seq2 = "";
+              let matchLine = "";
+
+              for (let i = 0; i < final_aligned1.length; i++) {
+                const char1 = final_aligned1[i];
+                const char2 = final_aligned2[i];
+                let charClass = "";
+
+                if (char1 === "-" || char2 === "-") {
+                  matchLine += " ";
+                } else if (char1 === char2) {
+                  matchLine += "|";
+                  charClass = "match";
+                } else {
+                  matchLine += ".";
+                  charClass = "mismatch";
+                }
+                colored_seq1 += `<span class="${charClass}">${char1}</span>`;
+                colored_seq2 += `<span class="${charClass}">${char2}</span>`;
+              }
 
               multiAlignmentHTML += `<div class="alignment-result-item" id="alignment-detail-${index}">`;
               if (alignments.length > 1) {
@@ -1097,7 +1315,7 @@ GTCGACGCA</textarea
                   aln.start_j
                 }])</h4>`;
               }
-              multiAlignmentHTML += `<div class="alignment-result">Seq 1: ${final_aligned1}<br><span class="match-line">       ${matchLine}</span><br>Seq 2: ${final_aligned2}</div>`;
+              multiAlignmentHTML += `<div class="alignment-result">Seq 1: ${colored_seq1}<br><span class="match-line">       ${matchLine}</span><br>Seq 2: ${colored_seq2}</div>`;
               multiAlignmentHTML += "</div>";
             });
 
@@ -1491,8 +1709,8 @@ GTCGACGCA</textarea
 
           drawUPGMATree(tree) {
             if (!tree) return;
-            const width = 800,
-              height = 500,
+            const width = 900,
+              height = 600,
               padding = 60,
               labelAreaWidth = 150;
             let leafCount = 0;
@@ -1521,28 +1739,37 @@ GTCGACGCA</textarea
             assignX(tree);
 
             let svg = `<svg class="tree-svg" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
+            let lines = "";
+            let nodes = "";
+            let labels = "";
 
-            const drawLinesAndLabels = (node) => {
+            const buildSvgElements = (node) => {
               if (node.isLeaf) {
-                svg += `<text x="${node.x + 8}" y="${
+                labels += `<text x="${node.x + 10}" y="${
                   node.y
-                }" dy=".3em" font-size="14" fill="#333" style="text-anchor: start;">${
+                }" dy=".3em" font-size="16" font-weight="bold" fill="#333" style="text-anchor: start;">${
                   node.label
                 }</text>`;
               } else {
                 const [c1, c2] = node.children;
-                svg += `<line x1="${node.x}" y1="${c1.y}" x2="${node.x}" y2="${c2.y}" stroke="#555" stroke-width="1"/>`;
-                svg += `<line x1="${node.x}" y1="${c1.y}" x2="${c1.x}" y2="${c1.y}" stroke="#555" stroke-width="1"/>`;
-                svg += `<line x1="${node.x}" y1="${c2.y}" x2="${c2.x}" y2="${c2.y}" stroke="#555" stroke-width="1"/>`;
-                svg += `<text x="${node.x - 4}" y="${
-                  node.y - 4
-                }" font-size="10" fill="var(--secondary-color)" text-anchor="end">${node.height.toFixed(
+                // Vertical line
+                lines += `<line x1="${node.x}" y1="${c1.y}" x2="${node.x}" y2="${c2.y}" stroke="#333" stroke-width="2" stroke-linejoin="round"/>`;
+                // Horizontal lines
+                lines += `<line x1="${node.x}" y1="${c1.y}" x2="${c1.x}" y2="${c1.y}" stroke="#333" stroke-width="2" stroke-linejoin="round"/>`;
+                lines += `<line x1="${node.x}" y1="${c2.y}" x2="${c2.x}" y2="${c2.y}" stroke="#333" stroke-width="2" stroke-linejoin="round"/>`;
+                // Circular node
+                nodes += `<circle cx="${node.x}" cy="${node.y}" r="4" fill="var(--primary-color)" />`;
+                // Height label
+                labels += `<text x="${node.x - 5}" y="${
+                  node.y - 5
+                }" font-size="12" fill="var(--secondary-color)" text-anchor="end">${node.height.toFixed(
                   2
                 )}</text>`;
-                node.children.forEach(drawLinesAndLabels);
+                node.children.forEach(buildSvgElements);
               }
             };
-            drawLinesAndLabels(tree);
+            buildSvgElements(tree);
+            svg += lines + nodes + labels; // Draw lines first, then nodes, then labels
             this.elements.treeDisplay.innerHTML = svg + `</svg>`;
           },
 
