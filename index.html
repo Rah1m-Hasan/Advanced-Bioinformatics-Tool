@@ -261,7 +261,6 @@
         color: var(--light-text);
         font-weight: bold;
       }
-      /* MODIFIED: Changed hover color for better visibility */
       .cell-source {
         background-color: #fffbdd !important; /* A light yellow */
         color: #111 !important; /* Force text to be dark for readability */
@@ -316,6 +315,43 @@
         font-weight: 600;
         color: var(--primary-color);
         margin: 15px 0;
+      }
+
+      .alignment-switcher {
+        margin: 20px 0;
+        padding: 15px;
+        background: #f1f3f5;
+        border-radius: 8px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .alignment-switcher h4 {
+        margin: 0;
+        padding: 0;
+        color: #333;
+        font-size: 1em;
+        border: none;
+      }
+      .alignment-switcher label {
+        font-weight: normal;
+        cursor: pointer;
+        margin-right: 10px;
+        display: inline-block;
+      }
+      .alignment-result-item {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+      }
+      .alignment-result-item:first-of-type {
+        margin-top: 10px;
+      }
+      #alignment-display > .alignment-result-item {
+        border-top: none;
+        padding-top: 0;
+        margin-top: 0;
       }
 
       /* --- UPGMA Specific --- */
@@ -554,9 +590,9 @@ GTCGACGCA</textarea
           <h3>Alignment Matrix</h3>
           <p>Click on a cell to see its calculation details.</p>
           <div class="matrix-container" id="matrix-display"></div>
-          <h3>Optimal Alignment</h3>
+          <h3>Optimal Alignment(s)</h3>
           <div class="score-display" id="score-display"></div>
-          <div class="alignment-result" id="alignment-display"></div>
+          <div id="alignment-display"></div>
         </div>
       </div>
 
@@ -616,7 +652,7 @@ GTCGACGCA</textarea
             matchInput: document.getElementById("match"),
             mismatchInput: document.getElementById("mismatch"),
             gapInput: document.getElementById("gap"),
-            tracebackPriority: document.getElementById("traceback-priority"), // ADD THIS LINE
+            tracebackPriority: document.getElementById("traceback-priority"),
             alignmentResults: document.getElementById("alignment-results"),
             matrixDisplay: document.getElementById("matrix-display"),
             scoreDisplay: document.getElementById("score-display"),
@@ -832,10 +868,10 @@ GTCGACGCA</textarea
                 if (maxScore === left) traceback[i][j].push("left");
               }
             }
-            const priority = this.elements.tracebackPriority
-              ? this.elements.tracebackPriority.value
-              : "diag-up-left";
-            const { aligned_v, aligned_h, path } = this.getAlignment(
+            const priority =
+              this.elements.tracebackPriority.value || "diag-up-left";
+            const alignment = this.getAlignment(
+              matrix,
               traceback,
               seq_v,
               seq_h,
@@ -848,11 +884,9 @@ GTCGACGCA</textarea
               matrix,
               traceback,
               score: matrix[m][n],
-              path,
-              aligned_v,
-              aligned_h,
+              alignments: [alignment],
               type: "Global",
-              priority: priority, // ADD THIS LINE
+              priority: priority,
             };
           },
 
@@ -865,9 +899,9 @@ GTCGACGCA</textarea
             const traceback = Array(m + 1)
               .fill(null)
               .map(() => Array(n + 1).fill(null));
-            let maxScore = 0,
-              maxI = 0,
-              maxJ = 0;
+            let maxScore = 0;
+            let maxCoords = [];
+
             for (let i = 1; i <= m; i++) {
               for (let j = 1; j <= n; j++) {
                 const matchScore =
@@ -880,47 +914,62 @@ GTCGACGCA</textarea
                 matrix[i][j] = currentMax;
 
                 traceback[i][j] = [];
-                if (currentMax === 0) {
-                  traceback[i][j].push("stop");
-                } else {
+                if (currentMax > 0) {
                   if (currentMax === diag) traceback[i][j].push("diag");
                   if (currentMax === up) traceback[i][j].push("up");
                   if (currentMax === left) traceback[i][j].push("left");
+                } else {
+                  traceback[i][j].push("stop");
                 }
 
-                if (matrix[i][j] >= maxScore) {
-                  // Use >= to find the bottom-most, right-most max score
+                if (matrix[i][j] > maxScore) {
                   maxScore = matrix[i][j];
-                  maxI = i;
-                  maxJ = j;
+                  maxCoords = [[i, j]];
+                } else if (matrix[i][j] === maxScore && maxScore > 0) {
+                  maxCoords.push([i, j]);
                 }
               }
             }
-            const priority = this.elements.tracebackPriority
-              ? this.elements.tracebackPriority.value
-              : "diag-up-left";
-            const { aligned_v, aligned_h, path } = this.getAlignment(
-              traceback,
-              seq_v,
-              seq_h,
-              maxI,
-              maxJ,
-              true,
-              priority
-            );
+
+            const priority =
+              this.elements.tracebackPriority.value || "diag-up-left";
+            const alignments = [];
+            if (maxCoords.length === 0 && maxScore === 0) {
+              alignments.push({
+                aligned_v: "",
+                aligned_h: "",
+                path: new Set(),
+                start_i: 0,
+                start_j: 0,
+              });
+            } else {
+              for (const [maxI, maxJ] of maxCoords) {
+                const alignment = this.getAlignment(
+                  matrix,
+                  traceback,
+                  seq_v,
+                  seq_h,
+                  maxI,
+                  maxJ,
+                  true,
+                  priority
+                );
+                alignments.push(alignment);
+              }
+            }
+
             return {
               matrix,
               traceback,
               score: maxScore,
-              path,
-              aligned_v,
-              aligned_h,
+              alignments,
               type: "Local",
-              priority: priority, // ADD THIS LINE
+              priority: priority,
             };
           },
 
           getAlignment(
+            matrix,
             traceback,
             seq_v,
             seq_h,
@@ -936,7 +985,7 @@ GTCGACGCA</textarea
               path.add(`${i},${j}`);
               const directions = traceback[i][j];
               if (!directions || directions.length === 0) break;
-              // Determine direction based on priority
+
               let direction;
               const priorityOrder = priority.split("-");
               for (const dir of priorityOrder) {
@@ -947,20 +996,25 @@ GTCGACGCA</textarea
               }
 
               if (!direction) direction = directions[0];
-              if (isLocal && direction === "stop") break;
+              if (isLocal && (direction === "stop" || matrix[i][j] === 0))
+                break;
 
               if (direction === "diag") {
-                aligned_v = seq_v[--i] + aligned_v;
-                aligned_h = seq_h[--j] + aligned_h;
+                aligned_v = seq_v[i - 1] + aligned_v;
+                aligned_h = seq_h[j - 1] + aligned_h;
+                i--;
+                j--;
               } else if (direction === "up") {
-                aligned_v = seq_v[--i] + aligned_v;
+                aligned_v = seq_v[i - 1] + aligned_v;
                 aligned_h = "-" + aligned_h;
+                i--;
               } else if (direction === "left") {
                 aligned_v = "-" + aligned_v;
-                aligned_h = seq_h[--j] + aligned_h;
+                aligned_h = seq_h[j - 1] + aligned_h;
+                j--;
               } else break;
             }
-            return { aligned_v, aligned_h, path };
+            return { aligned_v, aligned_h, path, start_i: i, start_j: j };
           },
 
           displayAlignmentResults(result) {
@@ -968,9 +1022,7 @@ GTCGACGCA</textarea
               matrix,
               traceback,
               score,
-              path,
-              aligned_v,
-              aligned_h,
+              alignments,
               seq_v,
               seq_h,
               seq1IsRow,
@@ -986,94 +1038,99 @@ GTCGACGCA</textarea
               for (let j = 0; j <= seq_h.length; j++) {
                 let arrowHTML = "";
                 if (traceback[i] && traceback[i][j]) {
-                  const directions = traceback[i][j];
-                  const isOnPath = path.has(`${i},${j}`);
-
-                  let takenDirection = null;
-                  if (isOnPath) {
-                    if (
-                      path.has(`${i - 1},${j - 1}`) &&
-                      directions.includes("diag")
-                    ) {
-                      takenDirection = "diag";
-                    } else if (
-                      path.has(`${i - 1},${j}`) &&
-                      directions.includes("up")
-                    ) {
-                      takenDirection = "up";
-                    } else if (
-                      path.has(`${i},${j - 1}`) &&
-                      directions.includes("left")
-                    ) {
-                      takenDirection = "left";
-                    }
-                  }
-
-                  if (directions.includes("diag")) {
-                    const highlight =
-                      takenDirection === "diag"
-                        ? ' style="color: #ff6b6b; font-size: 1.5em; font-weight: bold;"'
-                        : "";
-                    arrowHTML += `<span class="trace-arrow arrow-diag"${highlight}>↖</span>`;
-                  }
-                  if (directions.includes("up")) {
-                    const highlight =
-                      takenDirection === "up"
-                        ? ' style="color: #ff6b6b; font-size: 1.5em; font-weight: bold;"'
-                        : "";
-                    arrowHTML += `<span class="trace-arrow arrow-up"${highlight}>↑</span>`;
-                  }
-                  if (directions.includes("left")) {
-                    const highlight =
-                      takenDirection === "left"
-                        ? ' style="color: #ff6b6b; font-size: 1.5em; font-weight: bold;"'
-                        : "";
-                    arrowHTML += `<span class="trace-arrow arrow-left"${highlight}>←</span>`;
-                  }
+                  if (traceback[i][j].includes("diag"))
+                    arrowHTML += `<span class="trace-arrow arrow-diag">↖</span>`;
+                  if (traceback[i][j].includes("up"))
+                    arrowHTML += `<span class="trace-arrow arrow-up">↑</span>`;
+                  if (traceback[i][j].includes("left"))
+                    arrowHTML += `<span class="trace-arrow arrow-left">←</span>`;
                 }
-
-                tableHTML += `<td data-i="${i}" data-j="${j}" class="${
-                  path.has(`${i},${j}`) ? "cell-path" : ""
-                }">${arrowHTML}${matrix[i][j]}</td>`;
+                tableHTML += `<td data-i="${i}" data-j="${j}">${arrowHTML}${matrix[i][j]}</td>`;
               }
               tableHTML += "</tr>";
             }
             this.elements.matrixDisplay.innerHTML =
               tableHTML + "</tbody></table>";
             this.addMatrixEventListeners();
-            this.elements.scoreDisplay.textContent = `${type} Alignment Score: ${score}`;
 
-            const final_aligned1 = seq1IsRow ? aligned_v : aligned_h;
-            const final_aligned2 = seq1IsRow ? aligned_h : aligned_v;
+            if (type === "Local") {
+              this.elements.scoreDisplay.textContent = `Found ${alignments.length} optimal local alignment(s) with a score of ${score}.`;
+            } else {
+              this.elements.scoreDisplay.textContent = `Global Alignment Score: ${score}`;
+            }
 
-            let matchLine = [...final_aligned1]
-              .map((c, i) =>
-                c === final_aligned2[i]
-                  ? "|"
-                  : c === "-" || final_aligned2[i] === "-"
-                  ? " "
-                  : "."
-              )
-              .join("");
-            this.elements.alignmentDisplay.innerHTML = `Seq 1: ${final_aligned1}<br><span class="match-line">       ${matchLine}</span><br>Seq 2: ${final_aligned2}`;
+            let multiAlignmentHTML = "";
+            if (alignments.length > 1) {
+              multiAlignmentHTML +=
+                '<div class="alignment-switcher"><h4>View Alignment Path:</h4>';
+              alignments.forEach((_, index) => {
+                multiAlignmentHTML += `
+                        <input type="radio" name="alignment-choice" id="aln-choice-${index}" value="${index}" ${
+                  index === 0 ? "checked" : ""
+                }>
+                        <label for="aln-choice-${index}">Alignment ${
+                  index + 1
+                }</label>
+                    `;
+              });
+              multiAlignmentHTML += "</div>";
+            }
 
-            // Add this:
-            const pathCoords = Array.from(path)
-              .sort((a, b) => {
-                const [ai, aj] = a.split(",").map(Number);
-                const [bi, bj] = b.split(",").map(Number);
-                return bi + bj - (ai + aj);
-              })
-              .join(" → ");
+            alignments.forEach((aln, index) => {
+              const final_aligned1 = seq1IsRow ? aln.aligned_v : aln.aligned_h;
+              const final_aligned2 = seq1IsRow ? aln.aligned_h : aln.aligned_v;
+              let matchLine = [...final_aligned1]
+                .map((c, i) =>
+                  c === final_aligned2[i]
+                    ? "|"
+                    : c === "-" || final_aligned2[i] === "-"
+                    ? " "
+                    : "."
+                )
+                .join("");
 
-            this.elements.alignmentDisplay.innerHTML += `
-            <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 8px; font-family: 'Courier New', monospace; word-break: break-all;">
-                <b>Traceback Priority Used:</b> ${
-                  result.priority || "diag-up-left"
-                }<br>
-                <b>Path Coordinates:</b> ${pathCoords}<br>
-                <b>Alignment Score:</b> ${score}
-            </div>`;
+              multiAlignmentHTML += `<div class="alignment-result-item" id="alignment-detail-${index}">`;
+              if (alignments.length > 1) {
+                multiAlignmentHTML += `<h4>Alignment ${
+                  index + 1
+                } (Starts at matrix cell [${aln.start_i}, ${
+                  aln.start_j
+                }])</h4>`;
+              }
+              multiAlignmentHTML += `<div class="alignment-result">Seq 1: ${final_aligned1}<br><span class="match-line">       ${matchLine}</span><br>Seq 2: ${final_aligned2}</div>`;
+              multiAlignmentHTML += "</div>";
+            });
+
+            this.elements.alignmentDisplay.innerHTML = multiAlignmentHTML;
+
+            const updatePathDisplay = (index) => {
+              this.elements.matrixDisplay
+                .querySelectorAll("td.cell-path")
+                .forEach((c) => c.classList.remove("cell-path"));
+              if (alignments[index]) {
+                const path = alignments[index].path;
+                path.forEach((coord) => {
+                  const [i, j] = coord.split(",");
+                  const cell = this.elements.matrixDisplay.querySelector(
+                    `[data-i="${i}"][data-j="${j}"]`
+                  );
+                  if (cell) cell.classList.add("cell-path");
+                });
+              }
+            };
+
+            const radios = this.elements.alignmentDisplay.querySelectorAll(
+              'input[name="alignment-choice"]'
+            );
+            if (radios.length > 0) {
+              radios.forEach((radio) => {
+                radio.addEventListener("change", (e) =>
+                  updatePathDisplay(e.target.value)
+                );
+              });
+            }
+
+            updatePathDisplay(0);
 
             this.elements.alignmentResults.classList.add("visible");
           },
