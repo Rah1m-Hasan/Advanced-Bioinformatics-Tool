@@ -70,7 +70,8 @@
       }
 
       /* --- Forms & Inputs --- */
-      .method-selector {
+      .method-selector,
+      .upgma-input-selector {
         margin-bottom: 40px;
       }
       label {
@@ -111,6 +112,27 @@
         transition: border-color 0.3s, box-shadow 0.3s;
       }
 
+      /* --- Sequence Input Styling --- */
+      textarea,
+      .upgma-seq {
+        text-transform: uppercase;
+        font-family: "Courier New", monospace;
+      }
+
+      .input-warning {
+        color: var(--danger-color);
+        font-size: 13px;
+        height: 1.2em;
+        margin-top: 4px;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        text-align: right;
+      }
+      .upgma-warning {
+        grid-column: 4;
+        text-align: left;
+      }
+
       select:focus,
       input:focus,
       textarea:focus {
@@ -122,8 +144,6 @@
       textarea {
         min-height: 100px;
         resize: vertical;
-        font-family: "Courier New", monospace;
-        text-transform: uppercase;
       }
       .seq-counter {
         font-size: 14px;
@@ -152,6 +172,13 @@
       }
 
       /* --- Buttons --- */
+      .button-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+      }
+
       button {
         background: linear-gradient(
           135deg,
@@ -167,7 +194,6 @@
         cursor: pointer;
         transition: transform 0.15s, box-shadow 0.15s;
         width: 100%;
-        margin-top: 10px;
         position: relative;
         overflow: hidden;
       }
@@ -200,8 +226,12 @@
       .remove-btn {
         background: var(--danger-color);
       }
-      .add-seq-btn {
+      .add-seq-btn,
+      .matrix-control-btn {
         background: var(--success-color);
+      }
+      .matrix-control-btn.remove {
+        background: var(--danger-color);
       }
       .export-btn {
         background: #007bff;
@@ -209,6 +239,9 @@
       }
       .generate-btn {
         background: var(--info-color);
+      }
+      .reset-btn {
+        background: #6c757d;
       }
 
       /* --- Random Sequence Generator --- */
@@ -256,12 +289,14 @@
       } /* Pushes button to bottom */
 
       /* --- Sections & Results --- */
-      .method-section {
+      .method-section,
+      .upgma-input-container {
         display: none;
         opacity: 0;
         transition: opacity 0.5s ease-in-out;
       }
-      .method-section.active {
+      .method-section.active,
+      .upgma-input-container.active {
         display: block;
         opacity: 1;
       }
@@ -276,7 +311,8 @@
         display: block;
       }
       .matrix-container,
-      .distance-matrices-container {
+      .distance-matrices-container,
+      .matrix-input-container {
         overflow-x: auto;
         margin: 20px 0;
         padding: 10px;
@@ -306,6 +342,9 @@
       }
       td {
         cursor: help;
+      }
+      td:hover {
+        background-color: #f1f3f5;
       }
       .cell-path {
         background-color: #a29bfe !important;
@@ -347,16 +386,31 @@
         color: var(--light-text);
       }
 
+      /* --- ALIGNMENT RESULT STYLE FIX --- */
       .alignment-result {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0 1ch;
         font-family: "Courier New", monospace;
         background: var(--light-text);
         padding: 15px;
         border-radius: 8px;
         margin: 10px 0;
-        white-space: pre; /* Use pre for better alignment with spans */
         overflow-x: auto;
         font-size: 1.1em;
         line-height: 1.6;
+      }
+      .alignment-result .seq-label {
+        text-align: right;
+        font-weight: normal;
+        white-space: nowrap;
+      }
+      .alignment-result .seq-data,
+      .alignment-result .match-line {
+        white-space: pre;
+      }
+      .alignment-result .match-line {
+        color: #aaa;
       }
       .alignment-result span {
         font-weight: bold;
@@ -367,15 +421,19 @@
       .mismatch {
         color: var(--danger-color);
       }
-      .match-line {
-        color: #aaa;
-        font-family: monospace;
-      }
       .score-display {
         font-size: 1.2em;
         font-weight: 600;
         color: var(--primary-color);
         margin: 15px 0;
+      }
+      .result-note {
+        font-size: 0.9em;
+        color: #444;
+        background-color: #e9ecef;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
       }
 
       /* --- Pill Style Toggle Buttons for Alignment --- */
@@ -437,10 +495,11 @@
       /* --- UPGMA Specific --- */
       .seq-item {
         display: grid;
-        grid-template-columns: auto 1fr auto 2fr auto;
+        grid-template-columns: auto 1fr auto 1fr auto;
         align-items: center;
         gap: 15px;
         margin-bottom: 20px;
+        grid-template-rows: auto auto;
       }
       .seq-item label {
         margin: 0;
@@ -476,6 +535,31 @@
         border-radius: 8px;
         margin-top: 20px;
         font-family: "Courier New", monospace;
+      }
+
+      /* --- Matrix Input Specific --- */
+      .matrix-controls {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+      .matrix-input-table input {
+        width: 100%;
+        min-width: 60px;
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        text-align: center;
+      }
+      .matrix-input-table input:disabled {
+        background-color: #eee;
+        cursor: not-allowed;
+      }
+      .matrix-input-table th input {
+        background: none;
+        color: white;
+        font-weight: bold;
+        border: none;
       }
 
       /* --- Help & Calculation Tooltips --- */
@@ -519,7 +603,10 @@
       }
 
       .calc-tooltip {
-        display: none;
+        display: block; /* Use opacity and pointer-events for visibility */
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
         position: absolute;
         background-color: #2c3e50;
         color: white;
@@ -531,7 +618,13 @@
         font-size: 0.9em;
         width: auto;
         max-width: 500px;
+        pointer-events: none; /* Avoid tooltip catching mouse events */
       }
+      .calc-tooltip.visible {
+        visibility: visible;
+        opacity: 1;
+      }
+
       .calc-tooltip table {
         width: 100%;
         border-collapse: collapse;
@@ -591,25 +684,68 @@
         h1 {
           font-size: 2em;
         }
+        .subtitle {
+          font-size: 1em;
+        }
+
         .input-section,
         .params,
-        .random-seq-controls {
+        .random-seq-controls,
+        .button-group {
           grid-template-columns: 1fr;
         }
+
+        /* Responsive UPGMA Sequence Items */
         .seq-item {
-          grid-template-columns: 1fr;
+          grid-template-columns: 1fr; /* Stack all items into a single column */
           gap: 10px;
+          margin-bottom: 30px; /* Add more space between items */
+          padding-bottom: 20px; /* Add padding for the border */
+          border-bottom: 1px solid var(--border-color);
         }
         .seq-item label {
           margin-bottom: 0;
-          margin-top: 10px;
+          text-align: left; /* Align labels to the left */
         }
-        .seq-item label:first-of-type {
-          margin-top: 0;
+        .seq-item input {
+          width: 100%; /* Ensure inputs take full width */
         }
         .remove-btn {
           width: 100%;
           margin-top: 10px;
+        }
+        .upgma-warning {
+          grid-column: 1; /* Ensure warning is in the single column */
+          text-align: left;
+        }
+
+        /* Responsive Matrix Controls */
+        .matrix-controls {
+          flex-direction: column;
+        }
+        .matrix-controls .matrix-control-btn {
+          width: 100%;
+        }
+
+        /* Alignment Switcher (Pills) */
+        .alignment-switcher {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .alignment-switcher h4 {
+          margin-bottom: 15px;
+        }
+
+        /* General Button and Input Adjustments */
+        button {
+          padding: 12px 20px;
+        }
+        select,
+        input[type="text"],
+        input[type="number"],
+        textarea {
+          padding: 10px;
+          font-size: 15px;
         }
       }
     </style>
@@ -641,6 +777,7 @@
               </select>
             </div>
             <textarea id="seq1" placeholder="e.g., GATTACA">GATTACA</textarea>
+            <div class="input-warning"></div>
             <div id="seq1-counter" class="seq-counter"></div>
           </div>
           <div>
@@ -654,6 +791,7 @@
             <textarea id="seq2" placeholder="e.g., GTCGACGCA">
 GTCGACGCA</textarea
             >
+            <div class="input-warning"></div>
             <div id="seq2-counter" class="seq-counter"></div>
           </div>
         </div>
@@ -678,20 +816,24 @@ GTCGACGCA</textarea
                 <span class="tooltip-text"
                   >Determines which path to follow when multiple alignment paths
                   have the same score. 'Diagonal' is prioritized for
-                  matches/mismatches, 'Up' and 'Left' correspond to gaps.</span
+                  matches/mismatches, 'Up' (Top) and 'Left' correspond to
+                  gaps.</span
                 >
               </div>
             </div>
             <select id="traceback-priority">
               <option value="diag-up-left" selected>
-                Diagonal → Up → Left (Standard)
+                Diagonal → Up → Left
               </option>
               <option value="diag-left-up">Diagonal → Left → Up</option>
               <option value="up-diag-left">Up → Diagonal → Left</option>
+              <option value="up-left-diag">Up → Left → Diagonal</option>
               <option value="left-diag-up">Left → Diagonal → Up</option>
+              <option value="left-up-diag">Left → Up → Diagonal</option>
             </select>
           </div>
         </div>
+
         <!-- Random Sequence Generator -->
         <div class="random-seq-generator">
           <h4>Random Sequence Generator <span class="toggle-arrow">▼</span></h4>
@@ -715,13 +857,17 @@ GTCGACGCA</textarea
           </div>
         </div>
 
-        <button id="compute-alignment-btn">Compute Alignment</button>
+        <div class="button-group">
+          <button id="compute-alignment-btn">Compute Alignment</button>
+          <button id="reset-btn" class="reset-btn">Reset (R)</button>
+        </div>
 
         <div id="alignment-results" class="result-section">
           <h3>Alignment Matrix</h3>
-          <p>Click on a cell to see its calculation details.</p>
+          <p>Hover over a cell to see source cells; click for details.</p>
           <div class="matrix-container" id="matrix-display"></div>
           <h3>Optimal Alignment(s)</h3>
+          <div id="result-notes-container"></div>
           <div class="score-display" id="score-display"></div>
           <div id="alignment-display"></div>
         </div>
@@ -729,40 +875,69 @@ GTCGACGCA</textarea
 
       <!-- UPGMA Section -->
       <div id="upgma-section" class="method-section">
-        <div id="seq-container">
-          <!-- Initial sequences will be added here by JS -->
-        </div>
-        <div class="upgma-options">
-          <div class="label-with-tooltip">
-            <label for="upgma-distance-method"
-              >Initial Distance Matrix Calculation:</label
-            >
-            <div class="help-tooltip">
-              ?
-              <span class="tooltip-text"
-                ><b>Traditional Way:</b> Counts the total number of differing
-                positions (absolute difference).<br /><br /><b
-                  >Equation Method:</b
-                >
-                Calculates the proportion of differences (number of differences
-                / total aligned positions).</span
-              >
-            </div>
-          </div>
-
-          <select id="upgma-distance-method">
-            <option value="traditional">
-              Traditional Way (Absolute Difference)
-            </option>
-            <option value="equation">
-              Use Equation (Number of Differences / Total Positions)
-            </option>
+        <div class="upgma-input-selector">
+          <label for="upgma-input-method">Input Method:</label>
+          <select id="upgma-input-method">
+            <option value="sequence">Sequence Input</option>
+            <option value="matrix">Initial Distance Matrix</option>
           </select>
         </div>
-        <button class="add-seq-btn" id="add-seq-btn">Add Sequence</button>
-        <button id="build-upgma-btn">Build UPGMA Tree</button>
+
+        <!-- UPGMA Sequence Input Container -->
+        <div id="upgma-sequence-container" class="upgma-input-container active">
+          <div id="seq-container">
+            <!-- Initial sequences will be added here by JS -->
+          </div>
+          <div class="upgma-options">
+            <div class="label-with-tooltip">
+              <label for="upgma-distance-method"
+                >Distance Calculation Method:</label
+              >
+              <div class="help-tooltip">
+                ?
+                <span class="tooltip-text"
+                  ><b>Absolute Difference:</b> Counts the total number of
+                  differing positions.<br /><br /><b>Equation Method:</b>
+                  Calculates the proportion of differences (number of
+                  differences / total aligned positions). (normalized 0-1
+                  distance for 'equation' method).</span
+                >
+              </div>
+            </div>
+            <select id="upgma-distance-method">
+              <option value="traditional">Absolute Difference</option>
+              <option value="equation" selected>
+                Use Equation (Number of Differences / Total Positions)
+              </option>
+            </select>
+          </div>
+          <button class="add-seq-btn" id="add-seq-btn">Add Sequence</button>
+        </div>
+
+        <!-- UPGMA Matrix Input Container -->
+        <div id="upgma-matrix-container" class="upgma-input-container">
+          <h4>Enter Initial Distances</h4>
+          <div class="matrix-controls">
+            <button id="add-matrix-row-btn" class="matrix-control-btn">
+              Add Row/Column
+            </button>
+            <button
+              id="remove-matrix-row-btn"
+              class="matrix-control-btn remove"
+            >
+              Remove Row/Column
+            </button>
+          </div>
+          <div class="matrix-input-container" id="matrix-input-display"></div>
+        </div>
+
+        <div class="button-group">
+          <button id="build-upgma-btn">Build UPGMA Tree</button>
+          <button id="reset-upgma-btn" class="reset-btn">Reset (R)</button>
+        </div>
         <div id="upgma-results" class="result-section">
           <h3>UPGMA Clustering Process</h3>
+          <div id="upgma-info-container"></div>
           <div class="step-log" id="upgma-step-log"></div>
           <div class="distance-matrices-container" id="distance-matrices"></div>
           <h3>Phylogenetic Tree</h3>
@@ -804,32 +979,54 @@ GTCGACGCA</textarea
             matrixDisplay: document.getElementById("matrix-display"),
             scoreDisplay: document.getElementById("score-display"),
             alignmentDisplay: document.getElementById("alignment-display"),
+            resultNotesContainer: document.getElementById(
+              "result-notes-container"
+            ),
             randomLen1Input: document.getElementById("random-len1"),
             generateSeq1Btn: document.getElementById("generate-seq1-btn"),
             randomLen2Input: document.getElementById("random-len2"),
             generateSeq2Btn: document.getElementById("generate-seq2-btn"),
             generatorContainer: document.querySelector(".random-seq-generator"),
             generatorHeader: document.querySelector(".random-seq-generator h4"),
+            // UPGMA Elements
+            upgmaInputMethod: document.getElementById("upgma-input-method"),
+            upgmaSequenceContainer: document.getElementById(
+              "upgma-sequence-container"
+            ),
+            upgmaMatrixContainer: document.getElementById(
+              "upgma-matrix-container"
+            ),
             seqContainer: document.getElementById("seq-container"),
             upgmaDistanceMethod: document.getElementById(
               "upgma-distance-method"
             ),
             upgmaResults: document.getElementById("upgma-results"),
+            upgmaInfoContainer: document.getElementById("upgma-info-container"),
             stepLog: document.getElementById("upgma-step-log"),
             distanceMatrices: document.getElementById("distance-matrices"),
             treeDisplay: document.getElementById("tree-display"),
+            addMatrixRowBtn: document.getElementById("add-matrix-row-btn"),
+            removeMatrixRowBtn: document.getElementById(
+              "remove-matrix-row-btn"
+            ),
+            matrixInputDisplay: document.getElementById("matrix-input-display"),
             calcTooltip: document.getElementById("calc-tooltip"),
+            resetBtns: document.querySelectorAll(".reset-btn"),
           },
           state: {
             upgmaSeqCount: 0,
             lastAlignmentResult: null,
             lastUPGMAResult: null,
+            matrixInputSize: 3,
           },
 
           init() {
             this.addInitialUpgmaSequences();
+            this.renderMatrixInput();
             this.bindEvents();
             this.updateSeqCounters();
+            this.handleMethodSwitch(); // Set initial UI state
+            this.handleUpgmaInputSwitch(); // Set initial UPGMA UI state
           },
 
           bindEvents() {
@@ -860,22 +1057,40 @@ GTCGACGCA</textarea
               "change",
               this.handleAlignSwitch.bind(this)
             );
-            this.elements.seq1Input.addEventListener(
-              "input",
-              this.updateSeqCounters.bind(this)
+
+            // UPGMA Input Switcher
+            this.elements.upgmaInputMethod.addEventListener(
+              "change",
+              this.handleUpgmaInputSwitch.bind(this)
             );
-            this.elements.seq2Input.addEventListener(
-              "input",
-              this.updateSeqCounters.bind(this)
-            );
+            this.elements.addMatrixRowBtn.addEventListener("click", () => {
+              this.state.matrixInputSize++;
+              this.renderMatrixInput();
+            });
+            this.elements.removeMatrixRowBtn.addEventListener("click", () => {
+              if (this.state.matrixInputSize > 2) {
+                this.state.matrixInputSize--;
+                this.renderMatrixInput();
+              }
+            });
+
+            // Input validation and counters
+            const seqInputs = [
+              this.elements.seq1Input,
+              this.elements.seq2Input,
+            ];
+            seqInputs.forEach((input) => {
+              input.addEventListener("input", this.sanitizeAndWarn.bind(this));
+              input.addEventListener(
+                "input",
+                this.updateSeqCounters.bind(this)
+              );
+            });
 
             // Hide tooltip on outside click
             document.addEventListener("click", (e) => {
-              if (
-                !e.target.closest("td") &&
-                this.elements.calcTooltip.style.display === "block"
-              ) {
-                this.elements.calcTooltip.style.display = "none";
+              if (!e.target.closest("td")) {
+                this.elements.calcTooltip.classList.remove("visible");
               }
             });
 
@@ -894,11 +1109,35 @@ GTCGACGCA</textarea
               this.elements.generatorContainer.classList.toggle("expanded");
             });
 
+            // Reset functionality
+            this.elements.resetBtns.forEach((btn) =>
+              btn.addEventListener("click", this.reset.bind(this))
+            );
+            document.addEventListener("keydown", (e) => {
+              if (e.key.toLowerCase() === "r") {
+                e.preventDefault();
+                this.reset();
+              }
+            });
+
             // Button ripple effect
             const buttons = document.querySelectorAll("button");
             buttons.forEach((button) => {
               button.addEventListener("click", this.createRipple);
             });
+          },
+
+          reset() {
+            this.elements.alignmentResults.classList.remove("visible");
+            this.elements.upgmaResults.classList.remove("visible");
+            this.elements.matrixDisplay.innerHTML = "";
+            this.elements.alignmentDisplay.innerHTML = "";
+            this.elements.scoreDisplay.innerHTML = "";
+            this.elements.resultNotesContainer.innerHTML = "";
+            this.elements.upgmaInfoContainer.innerHTML = "";
+            this.elements.stepLog.innerHTML = "";
+            this.elements.distanceMatrices.innerHTML = "";
+            this.elements.treeDisplay.innerHTML = "";
           },
 
           createRipple(event) {
@@ -908,7 +1147,6 @@ GTCGACGCA</textarea
             const radius = diameter / 2;
 
             circle.style.width = circle.style.height = `${diameter}px`;
-            // Calculate position relative to the viewport, then adjust for button's position
             const buttonRect = button.getBoundingClientRect();
             circle.style.left = `${event.clientX - buttonRect.left - radius}px`;
             circle.style.top = `${event.clientY - buttonRect.top - radius}px`;
@@ -920,6 +1158,45 @@ GTCGACGCA</textarea
             }
 
             button.appendChild(circle);
+          },
+
+          sanitizeAndWarn(event) {
+            const input = event.target;
+            const originalValue = input.value;
+            const cursorPosition = input.selectionStart;
+
+            // Sanitize: convert to uppercase and remove invalid characters
+            const sanitizedValue = originalValue
+              .toUpperCase()
+              .replace(/[^ATCG]/g, "");
+
+            if (originalValue !== sanitizedValue) {
+              const diff = originalValue.length - sanitizedValue.length;
+              input.value = sanitizedValue;
+              // Try to adjust cursor position logically
+              const newCursorPos = Math.max(0, cursorPosition - diff);
+              input.setSelectionRange(newCursorPos, newCursorPos);
+
+              // Show warning message
+              this.showInputWarning(input, "Only A, T, C, G are allowed.");
+            }
+          },
+
+          showInputWarning(inputElement, message) {
+            let warningEl =
+              inputElement.parentElement.querySelector(".input-warning");
+            if (!warningEl) return;
+
+            warningEl.textContent = message;
+            warningEl.style.opacity = "1";
+
+            if (warningEl.timer) {
+              clearTimeout(warningEl.timer);
+            }
+
+            warningEl.timer = setTimeout(() => {
+              warningEl.style.opacity = "0";
+            }, 2500);
           },
 
           updateSeqCounters() {
@@ -961,9 +1238,22 @@ GTCGACGCA</textarea
             );
           },
 
+          handleUpgmaInputSwitch() {
+            const inputMethod = this.elements.upgmaInputMethod.value;
+            this.elements.upgmaSequenceContainer.classList.toggle(
+              "active",
+              inputMethod === "sequence"
+            );
+            this.elements.upgmaMatrixContainer.classList.toggle(
+              "active",
+              inputMethod === "matrix"
+            );
+          },
+
           handleAlignment() {
             const btn = this.elements.computeAlignmentBtn;
             this.toggleButtonLoading(btn, true);
+            this.reset();
             setTimeout(() => {
               try {
                 const method = this.elements.methodSelect.value;
@@ -1011,28 +1301,48 @@ GTCGACGCA</textarea
           handleUPGMA() {
             const btn = this.elements.buildUpgmaBtn;
             this.toggleButtonLoading(btn, true);
+            this.reset();
             setTimeout(() => {
               try {
-                const sequences = Array.from(
-                  this.elements.seqContainer.querySelectorAll(".upgma-seq")
-                ).map((el) => el.value.toUpperCase().replace(/\s/g, ""));
-                const names = Array.from(
-                  this.elements.seqContainer.querySelectorAll(".upgma-name")
-                ).map((el) => el.value.trim());
-                if (sequences.filter((s) => s).length < 2) {
-                  alert("Please provide at least two sequences for UPGMA.");
-                  return;
+                const inputMethod = this.elements.upgmaInputMethod.value;
+                let result;
+
+                if (inputMethod === "sequence") {
+                  const sequences = Array.from(
+                    this.elements.seqContainer.querySelectorAll(".upgma-seq")
+                  ).map((el) => el.value.toUpperCase().replace(/\s/g, ""));
+                  const names = Array.from(
+                    this.elements.seqContainer.querySelectorAll(".upgma-name")
+                  ).map((el) => el.value.trim());
+                  if (sequences.filter((s) => s).length < 2) {
+                    throw new Error(
+                      "Please provide at least two sequences for UPGMA."
+                    );
+                  }
+                  const distanceMethod =
+                    this.elements.upgmaDistanceMethod.value;
+                  result = this.upgmaFromSequences(
+                    sequences,
+                    names,
+                    distanceMethod
+                  );
+                  result.distanceMethod = distanceMethod;
+                } else {
+                  // Matrix Input
+                  const { matrix, labels } = this.readMatrixFromDOM();
+                  if (labels.length < 2) {
+                    throw new Error(
+                      "Please provide at least two rows/columns in the distance matrix."
+                    );
+                  }
+                  result = this.upgmaFromMatrix(matrix, labels);
                 }
-                const distanceMethod = this.elements.upgmaDistanceMethod.value;
-                const result = this.upgma(sequences, names, distanceMethod);
 
-                result.distanceMethod = distanceMethod;
                 this.state.lastUPGMAResult = result;
-
                 this.displayUPGMAResults(result);
               } catch (e) {
                 console.error("UPGMA Error:", e);
-                alert("An error occurred during UPGMA tree construction.");
+                alert("Error during UPGMA tree construction: " + e.message);
               } finally {
                 this.toggleButtonLoading(btn, false);
               }
@@ -1073,25 +1383,23 @@ GTCGACGCA</textarea
                 if (maxScore === left) traceback[i][j].push("left");
               }
             }
-            const priority =
-              this.elements.tracebackPriority.value || "diag-up-left";
-            const alignment = this.getAlignment(
+
+            const alignments = this.getAllAlignments(
               matrix,
               traceback,
               seq_v,
               seq_h,
               m,
               n,
-              false,
-              priority
+              false
             );
+
             return {
               matrix,
               traceback,
               score: matrix[m][n],
-              alignments: [alignment],
+              alignments: alignments,
               type: "Global",
-              priority: priority,
             };
           },
 
@@ -1169,7 +1477,6 @@ GTCGACGCA</textarea
               score: maxScore,
               alignments,
               type: "Local",
-              priority: priority,
             };
           },
 
@@ -1186,9 +1493,11 @@ GTCGACGCA</textarea
             let aligned_v = "",
               aligned_h = "";
             const path = new Set();
-            while (i > 0 || j > 0) {
-              path.add(`${i},${j}`);
-              const directions = traceback[i][j];
+            let current_i = i,
+              current_j = j;
+            while (current_i > 0 || current_j > 0) {
+              path.add(`${current_i},${current_j}`);
+              const directions = traceback[current_i][current_j];
               if (!directions || directions.length === 0) break;
 
               let direction;
@@ -1201,25 +1510,108 @@ GTCGACGCA</textarea
               }
 
               if (!direction) direction = directions[0];
-              if (isLocal && (direction === "stop" || matrix[i][j] === 0))
+              if (
+                isLocal &&
+                (direction === "stop" || matrix[current_i][current_j] === 0)
+              )
                 break;
 
               if (direction === "diag") {
-                aligned_v = seq_v[i - 1] + aligned_v;
-                aligned_h = seq_h[j - 1] + aligned_h;
-                i--;
-                j--;
+                aligned_v = seq_v[current_i - 1] + aligned_v;
+                aligned_h = seq_h[current_j - 1] + aligned_h;
+                current_i--;
+                current_j--;
               } else if (direction === "up") {
-                aligned_v = seq_v[i - 1] + aligned_v;
+                aligned_v = seq_v[current_i - 1] + aligned_v;
                 aligned_h = "-" + aligned_h;
-                i--;
+                current_i--;
               } else if (direction === "left") {
                 aligned_v = "-" + aligned_v;
-                aligned_h = seq_h[j - 1] + aligned_h;
-                j--;
+                aligned_h = seq_h[current_j - 1] + aligned_h;
+                current_j--;
               } else break;
             }
-            return { aligned_v, aligned_h, path, start_i: i, start_j: j };
+            return {
+              aligned_v,
+              aligned_h,
+              path,
+              start_i: current_i,
+              start_j: current_j,
+              end_i: i,
+              end_j: j,
+            };
+          },
+
+          getAllAlignments(matrix, traceback, seq_v, seq_h, m, n, isLocal) {
+            const results = [];
+            const stack = [
+              { i: m, j: n, path: new Set(), aln_v: "", aln_h: "" },
+            ];
+            const visited = new Set();
+
+            while (stack.length > 0) {
+              const { i, j, path, aln_v, aln_h } = stack.pop();
+
+              const stateKey = `${i}-${j}-${aln_v}-${aln_h}`;
+              if (visited.has(stateKey)) continue;
+              visited.add(stateKey);
+
+              const newPath = new Set(path);
+              newPath.add(`${i},${j}`);
+
+              if (
+                (!isLocal && i === 0 && j === 0) ||
+                (isLocal && (matrix[i][j] === 0 || !traceback[i][j]))
+              ) {
+                results.push({
+                  aligned_v: aln_v,
+                  aligned_h: aln_h,
+                  path: newPath,
+                  start_i: i,
+                  start_j: j,
+                  end_i: m,
+                  end_j: n,
+                });
+                continue;
+              }
+
+              const directions = traceback[i][j] || [];
+              for (const dir of directions) {
+                if (dir === "diag") {
+                  stack.push({
+                    i: i - 1,
+                    j: j - 1,
+                    path: newPath,
+                    aln_v: seq_v[i - 1] + aln_v,
+                    aln_h: seq_h[j - 1] + aln_h,
+                  });
+                }
+                if (dir === "up") {
+                  stack.push({
+                    i: i - 1,
+                    j: j,
+                    path: newPath,
+                    aln_v: seq_v[i - 1] + aln_v,
+                    aln_h: "-" + aln_h,
+                  });
+                }
+                if (dir === "left") {
+                  stack.push({
+                    i: i,
+                    j: j - 1,
+                    path: newPath,
+                    aln_v: "-" + aln_v,
+                    aln_h: seq_h[j - 1] + aln_h,
+                  });
+                }
+              }
+            }
+            // Deduplicate final alignments
+            const uniqueAlignments = {};
+            for (const res of results) {
+              uniqueAlignments[res.aligned_v + "|" + res.aligned_h] = res;
+            }
+            return Object.values(uniqueAlignments);
           },
 
           displayAlignmentResults(result) {
@@ -1258,10 +1650,20 @@ GTCGACGCA</textarea
               tableHTML + "</tbody></table>";
             this.addMatrixEventListeners();
 
+            let note = "";
+            if (type === "Local" && alignments.length > 1) {
+              note =
+                '<div class="result-note">Multiple alignments may appear if several local maxima exist.</div>';
+            } else if (alignments.length > 1) {
+              note =
+                '<div class="result-note">Multiple optimal alignments exist and are shown below.</div>';
+            }
+            this.elements.resultNotesContainer.innerHTML = note;
+
             if (type === "Local") {
               this.elements.scoreDisplay.textContent = `Found ${alignments.length} optimal local alignment(s) with a score of ${score}.`;
             } else {
-              this.elements.scoreDisplay.textContent = `Global Alignment Score: ${score}`;
+              this.elements.scoreDisplay.textContent = `Found ${alignments.length} optimal global alignment(s) with a score of ${score}.`;
             }
 
             let multiAlignmentHTML = "";
@@ -1309,13 +1711,22 @@ GTCGACGCA</textarea
 
               multiAlignmentHTML += `<div class="alignment-result-item" id="alignment-detail-${index}">`;
               if (alignments.length > 1) {
+                const startText =
+                  type === "Local"
+                    ? `(Ends at matrix cell [${aln.end_i}, ${aln.end_j}])`
+                    : "";
                 multiAlignmentHTML += `<h4>Alignment ${
                   index + 1
-                } (Starts at matrix cell [${aln.start_i}, ${
-                  aln.start_j
-                }])</h4>`;
+                } ${startText}</h4>`;
               }
-              multiAlignmentHTML += `<div class="alignment-result">Seq 1: ${colored_seq1}<br><span class="match-line">       ${matchLine}</span><br>Seq 2: ${colored_seq2}</div>`;
+
+              // --- HTML STRUCTURE FIX ---
+              multiAlignmentHTML += `<div class="alignment-result">
+                <span class="seq-label">Seq 1:</span><span class="seq-data">${colored_seq1}</span>
+                <span class="seq-label"></span><span class="match-line">${matchLine}</span>
+                <span class="seq-label">Seq 2:</span><span class="seq-data">${colored_seq2}</span>
+              </div>`;
+
               multiAlignmentHTML += "</div>";
             });
 
@@ -1335,6 +1746,12 @@ GTCGACGCA</textarea
                   if (cell) cell.classList.add("cell-path");
                 });
               }
+              // Hide/show alignment details
+              document
+                .querySelectorAll(".alignment-result-item")
+                .forEach((item, idx) => {
+                  item.style.display = idx == index ? "block" : "none";
+                });
             };
 
             const radios = this.elements.alignmentDisplay.querySelectorAll(
@@ -1364,12 +1781,15 @@ GTCGACGCA</textarea
                   const { traceback } = this.state.lastAlignmentResult;
                   const directions = traceback[i] ? traceback[i][j] || [] : [];
                   directions.forEach((direction) => {
-                    if (direction === "diag" || direction === "stop")
-                      this.highlightCell(i - 1, j - 1);
-                    if (direction === "up" || direction === "stop")
-                      this.highlightCell(i - 1, j);
-                    if (direction === "left" || direction === "stop")
-                      this.highlightCell(i, j - 1);
+                    if (direction === "diag" || direction === "stop") {
+                      if (i > 0 && j > 0) this.highlightCell(i - 1, j - 1);
+                    }
+                    if (direction === "up" || direction === "stop") {
+                      if (i > 0) this.highlightCell(i - 1, j);
+                    }
+                    if (direction === "left" || direction === "stop") {
+                      if (j > 0) this.highlightCell(i, j - 1);
+                    }
                   });
                 });
                 cell.addEventListener("mouseout", () =>
@@ -1474,7 +1894,9 @@ GTCGACGCA</textarea
             <input type="text" class="upgma-seq" value="${
               sequence || this.generateRandomSequence(8)
             }">
-            <button class="remove-btn">Remove</button>`;
+            <button class="remove-btn">Remove</button>
+            <div class="input-warning upgma-warning"></div>
+            `;
             div
               .querySelector(".remove-btn")
               .addEventListener("click", (e) =>
@@ -1482,16 +1904,21 @@ GTCGACGCA</textarea
                   ? e.currentTarget.parentElement.remove()
                   : alert("At least two sequences are required.")
               );
+            div
+              .querySelector(".upgma-seq")
+              .addEventListener("input", this.sanitizeAndWarn.bind(this));
             this.elements.seqContainer.appendChild(div);
           },
 
-          upgma(sequences, names, distanceMethod) {
+          upgmaFromSequences(sequences, names, distanceMethod) {
             const distance = (s1, s2) => {
               const len = Math.min(s1.length, s2.length);
-              if (len === 0)
+              if (len === 0) {
+                if (s1.length === 0 && s2.length === 0) return 0;
                 return distanceMethod === "equation"
-                  ? 0
+                  ? 1
                   : Math.max(s1.length, s2.length);
+              }
 
               let diff = 0;
               for (let i = 0; i < len; i++) {
@@ -1567,7 +1994,98 @@ GTCGACGCA</textarea
             return { tree: clusters[0], steps, matrices };
           },
 
+          upgmaFromMatrix(initialMatrix, initialLabels) {
+            let clusters = initialLabels.map((label) => ({
+              label: label,
+              height: 0,
+              isLeaf: true,
+            }));
+            const steps = [],
+              matrices = [];
+
+            let currentMatrix = initialMatrix;
+
+            while (clusters.length > 1) {
+              matrices.push({
+                matrix: currentMatrix,
+                labels: clusters.map((c) => c.label),
+                clusters: JSON.parse(JSON.stringify(clusters)),
+              });
+
+              let minDist = Infinity,
+                minI = -1,
+                minJ = -1;
+              for (let i = 0; i < currentMatrix.length; i++) {
+                for (let j = i + 1; j < currentMatrix.length; j++) {
+                  if (currentMatrix[i][j] < minDist) {
+                    minDist = currentMatrix[i][j];
+                    minI = i;
+                    minJ = j;
+                  }
+                }
+              }
+
+              const c1 = clusters[minI],
+                c2 = clusters[minJ];
+              steps.push(
+                `Merging '${c1.label}' and '${
+                  c2.label
+                }' at distance ${minDist.toFixed(2)}.`
+              );
+              const newCluster = {
+                label: `(${c1.label}, ${c2.label})`,
+                height: minDist / 2,
+                children: [c1, c2],
+                isLeaf: false,
+              };
+
+              const newSize = clusters.length - 1;
+              const newMatrix = Array(newSize)
+                .fill(0)
+                .map(() => Array(newSize).fill(Infinity));
+              const newClusters = [];
+              let newI = 0;
+              for (let i = 0; i < clusters.length; i++) {
+                if (i === minI || i === minJ) continue;
+                newClusters.push(clusters[i]);
+                let newJ = 0;
+                for (let j = 0; j < clusters.length; j++) {
+                  if (j === minI || j === minJ) continue;
+                  newMatrix[newI][newJ] = currentMatrix[i][j];
+                  newJ++;
+                }
+                newI++;
+              }
+
+              // Calculate distances for the new cluster
+              const newClusterDistances = [];
+              for (let i = 0; i < clusters.length; i++) {
+                if (i === minI || i === minJ) continue;
+                const dist =
+                  (currentMatrix[minI][i] + currentMatrix[minJ][i]) / 2;
+                newClusterDistances.push(dist);
+              }
+
+              for (let i = 0; i < newClusterDistances.length; i++) {
+                newMatrix[i][newSize - 1] = newMatrix[newSize - 1][i] =
+                  newClusterDistances[i];
+              }
+
+              newClusters.push(newCluster);
+              clusters = newClusters;
+              currentMatrix = newMatrix;
+            }
+            return { tree: clusters[0], steps, matrices };
+          },
+
           displayUPGMAResults({ tree, steps, matrices }) {
+            const allDistances = matrices.flatMap((m) =>
+              m.matrix.flat().filter((d) => d !== Infinity)
+            );
+            if (allDistances.every((d) => d === 0)) {
+              this.elements.upgmaInfoContainer.innerHTML = `<div class="result-note">All sequences are identical - distances collapsed to 0.</div>`;
+            }
+
             this.elements.stepLog.innerHTML = steps
               .map((step, i) => `<b>Step ${i + 1}:</b> ${step}`)
               .join("<br>");
@@ -1615,96 +2133,194 @@ GTCGACGCA</textarea
           },
 
           showUPGMACalculationTooltip(matrixIdx, rowIdx, colIdx, event) {
-            if (rowIdx === colIdx) {
-              const matrixData = this.state.lastUPGMAResult.matrices[matrixIdx];
-              const cluster = matrixData.clusters[rowIdx];
-              this.displayTooltip(
-                `<h4>Calculation for (${cluster.label}, ${cluster.label})</h4><div>Distance to self is always 0.</div>`,
-                event
-              );
-              return;
-            }
-
-            if (rowIdx > colIdx) {
-              [rowIdx, colIdx] = [colIdx, rowIdx];
-            }
-
             const { matrices, distanceMethod } = this.state.lastUPGMAResult;
             const matrixData = matrices[matrixIdx];
             const cluster1 = matrixData.clusters[rowIdx];
             const cluster2 = matrixData.clusters[colIdx];
             const finalValue = matrixData.matrix[rowIdx][colIdx];
+            let tooltipContent = "";
 
-            let tooltipContent = `<h4>Calculation for (${cluster1.label}, ${cluster2.label})</h4>`;
-            let details = "";
-            let totalDist = 0;
-            let comparisons = 0;
+            if (rowIdx === colIdx) {
+              tooltipContent = `<h4>Calculation for (${cluster1.label}, ${cluster1.label})</h4><div>Distance to self is always 0.</div>`;
+              this.displayTooltip(tooltipContent, event);
+              return;
+            }
 
-            cluster1.members.forEach((s1) => {
-              cluster2.members.forEach((s2) => {
-                const len = Math.min(s1.length, s2.length);
-                let diff = 0;
-                if (len > 0) {
-                  for (let i = 0; i < len; i++) {
-                    if (s1[i] !== s2[i]) diff++;
-                  }
-                }
+            if (rowIdx > colIdx) [rowIdx, colIdx] = [colIdx, rowIdx];
 
-                if (distanceMethod === "equation") {
-                  const dist = len > 0 ? diff / len : 0;
-                  totalDist += dist;
-                  details += `<div>${s1} vs ${s2} &rarr; ${diff}/${len} = ${dist.toFixed(
-                    2
-                  )}</div>`;
-                } else {
-                  const dist = diff + Math.abs(s1.length - s2.length);
-                  totalDist += dist;
-                  details += `<div>${s1} vs ${s2} &rarr; ${dist} differences</div>`;
-                }
-                comparisons++;
-              });
-            });
+            tooltipContent = `<h4>Calculation for (${cluster1.label}, ${cluster2.label})</h4>`;
 
-            tooltipContent += `<div class="upgma-calc-detail"><b>Individual Comparisons:</b>${details}</div>`;
-            tooltipContent += `<hr><div><b>Average Calculation:</b><br>
-                               (${totalDist.toFixed(
-                                 2
-                               )}) / ${comparisons} = <b class="winning-score">${finalValue.toFixed(
+            // This tooltip logic is complex for merged clusters from matrix input.
+            // For now, we simplify and show the merge calculation if it's not the initial matrix.
+            if (matrixIdx > 0) {
+              // Try to find the source clusters in the previous matrix
+              const prevMatrixData = matrices[matrixIdx - 1];
+              const sourceLabel = cluster1.label; // e.g. "(Human, Chimp)"
+              const mergedLabels = sourceLabel
+                .replace(/[()]/g, "")
+                .split(/,\s*/);
+              const prevC1_label = mergedLabels[mergedLabels.length - 2];
+              const prevC2_label = mergedLabels[mergedLabels.length - 1];
+
+              const prev_idx1 = prevMatrixData.labels.indexOf(prevC1_label);
+              const prev_idx2 = prevMatrixData.labels.indexOf(prevC2_label);
+              const other_idx = prevMatrixData.labels.indexOf(cluster2.label);
+
+              if (prev_idx1 > -1 && prev_idx2 > -1 && other_idx > -1) {
+                const val1 = prevMatrixData.matrix[other_idx][prev_idx1];
+                const val2 = prevMatrixData.matrix[other_idx][prev_idx2];
+                tooltipContent += `<div class="upgma-calc-detail">This value is the average of the previous distances from '${cluster2.label}' to the merged components '${prevC1_label}' and '${prevC2_label}'.</div>`;
+                tooltipContent += `<hr><div><b>Average Calculation:</b><br>
+                               (${val1.toFixed(2)} + ${val2.toFixed(
+                  2
+                )}) / 2 = <b class="winning-score">${finalValue.toFixed(
+                  2
+                )}</b></div>`;
+                this.displayTooltip(tooltipContent, event);
+                return;
+              }
+            }
+
+            // Fallback for initial matrix or if logic above fails
+            tooltipContent += `<div>Value is ${finalValue.toFixed(
               2
-            )}</b></div>`;
-
+            )}. From initial matrix or previous step.</div>`;
             this.displayTooltip(tooltipContent, event);
           },
 
           displayTooltip(content, event) {
             const tooltip = this.elements.calcTooltip;
             tooltip.innerHTML = content;
-            tooltip.style.display = "block";
-
+            tooltip.classList.add("visible");
             const rect = event.currentTarget.getBoundingClientRect();
-            let x = rect.left + window.scrollX + rect.width / 2;
-            let y = rect.top + window.scrollY + rect.height;
 
-            tooltip.style.left = "0px";
-            tooltip.style.top = "0px";
-            const tooltipWidth = tooltip.offsetWidth;
-            const tooltipHeight = tooltip.offsetHeight;
+            requestAnimationFrame(() => {
+              let x = rect.left + window.scrollX + rect.width / 2;
+              let y = rect.top + window.scrollY + rect.height;
+              const tooltipWidth = tooltip.offsetWidth;
+              const tooltipHeight = tooltip.offsetHeight;
 
-            if (x + tooltipWidth / 2 > document.documentElement.clientWidth) {
-              x = document.documentElement.clientWidth - tooltipWidth - 5;
-            } else {
-              x = x - tooltipWidth / 2;
+              x = x - tooltipWidth / 2; // Center it
+
+              if (x + tooltipWidth > document.documentElement.clientWidth) {
+                x = document.documentElement.clientWidth - tooltipWidth - 10;
+              }
+              if (
+                y + tooltipHeight >
+                document.documentElement.clientHeight + window.scrollY
+              ) {
+                y = rect.top + window.scrollY - tooltipHeight - 10;
+              }
+
+              tooltip.style.left = `${Math.max(10, x)}px`;
+              tooltip.style.top = `${Math.max(10, y)}px`;
+            });
+          },
+
+          // --- UPGMA Matrix Input Functions ---
+          renderMatrixInput() {
+            const size = this.state.matrixInputSize;
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            let tableHTML = `<table class="matrix-input-table"><thead><tr><th></th>`;
+            for (let i = 0; i < size; i++) {
+              tableHTML += `<th><input type="text" class="matrix-label" data-index="${i}" value="${alphabet[i]}"></th>`;
+            }
+            tableHTML += `</tr></thead><tbody>`;
+            for (let i = 0; i < size; i++) {
+              tableHTML += `<tr><th><input type="text" class="matrix-label" data-index="${i}" value="${alphabet[i]}"></th>`;
+              for (let j = 0; j < size; j++) {
+                if (i === j) {
+                  tableHTML += `<td><input type="number" value="0" disabled></td>`;
+                } else {
+                  tableHTML += `<td><input type="number" class="matrix-value" data-row="${i}" data-col="${j}" min="0" step="any"></td>`;
+                }
+              }
+              tableHTML += `</tr>`;
+            }
+            tableHTML += `</tbody></table>`;
+            this.elements.matrixInputDisplay.innerHTML = tableHTML;
+            this.bindMatrixInputEvents();
+          },
+
+          bindMatrixInputEvents() {
+            const labels =
+              this.elements.matrixInputDisplay.querySelectorAll(
+                ".matrix-label"
+              );
+            const values =
+              this.elements.matrixInputDisplay.querySelectorAll(
+                ".matrix-value"
+              );
+
+            labels.forEach((label) => {
+              label.addEventListener("input", (e) => {
+                const index = e.target.dataset.index;
+                const value = e.target.value;
+                this.elements.matrixInputDisplay
+                  .querySelectorAll(`.matrix-label[data-index="${index}"]`)
+                  .forEach((el) => (el.value = value));
+              });
+            });
+
+            values.forEach((value) => {
+              value.addEventListener("input", (e) => {
+                const r = e.target.dataset.row;
+                const c = e.target.dataset.col;
+                const symmetricalCell =
+                  this.elements.matrixInputDisplay.querySelector(
+                    `.matrix-value[data-row="${c}"][data-col="${r}"]`
+                  );
+                if (symmetricalCell) {
+                  symmetricalCell.value = e.target.value;
+                }
+              });
+            });
+          },
+
+          readMatrixFromDOM() {
+            const size = this.state.matrixInputSize;
+            const labels = [];
+            const matrix = Array(size)
+              .fill(0)
+              .map(() => Array(size).fill(0));
+            const labelInputs =
+              this.elements.matrixInputDisplay.querySelectorAll(
+                "th .matrix-label"
+              );
+
+            for (let i = 0; i < size; i++) {
+              labels.push(labelInputs[i].value.trim());
             }
 
-            if (
-              y + tooltipHeight >
-              document.documentElement.clientHeight + window.scrollY
-            ) {
-              y = rect.top + window.scrollY - tooltipHeight - 5;
+            for (let r = 0; r < size; r++) {
+              for (let c = 0; c < size; c++) {
+                if (r === c) continue;
+                const cell = this.elements.matrixInputDisplay.querySelector(
+                  `input[data-row="${r}"][data-col="${c}"]`
+                );
+                const value = parseFloat(cell.value);
+                if (isNaN(value)) {
+                  throw new Error(
+                    `Invalid input at (${labels[r]}, ${labels[c]}). Please enter a number.`
+                  );
+                }
+                matrix[r][c] = value;
+              }
             }
+            return { matrix, labels };
+          },
 
-            tooltip.style.left = `${Math.max(5, x)}px`;
-            tooltip.style.top = `${Math.max(5, y)}px`;
+          getAllNodes(tree) {
+            const nodes = [];
+            function traverse(node) {
+              if (!node) return;
+              nodes.push(node);
+              if (node.children) {
+                node.children.forEach(traverse);
+              }
+            }
+            traverse(tree);
+            return nodes;
           },
 
           drawUPGMATree(tree) {
@@ -1716,10 +2332,18 @@ GTCGACGCA</textarea
             let leafCount = 0;
             const numLeaves = this.countLeaves(tree);
 
+            const allNodes = this.getAllNodes(tree);
+            let maxHeight = Math.max(...allNodes.map((n) => n.height));
+
+            if (maxHeight === 0) {
+              maxHeight = 0.1; // Add epsilon if all heights are 0
+            }
+
             const assignY = (node) => {
               if (node.isLeaf) {
                 node.y =
-                  (leafCount++ * (height - padding * 2)) / (numLeaves - 1) +
+                  (leafCount++ * (height - padding * 2)) /
+                    (numLeaves - 1 || 1) +
                   padding;
               } else {
                 node.children.forEach(assignY);
@@ -1728,9 +2352,9 @@ GTCGACGCA</textarea
             };
 
             const assignX = (node) => {
-              const maxH = tree.height || 1;
               node.x =
-                (width - padding - labelAreaWidth) * (1 - node.height / maxH) +
+                (width - padding - labelAreaWidth) *
+                  (1 - node.height / maxHeight) +
                 padding;
               if (!node.isLeaf) node.children.forEach(assignX);
             };
@@ -1750,6 +2374,9 @@ GTCGACGCA</textarea
                 }" dy=".3em" font-size="16" font-weight="bold" fill="#333" style="text-anchor: start;">${
                   node.label
                 }</text>`;
+                lines += `<line x1="${node.x}" y1="${node.y}" x2="${
+                  node.x + 5
+                }" y2="${node.y}" stroke="#333" stroke-width="2"/>`;
               } else {
                 const [c1, c2] = node.children;
                 // Vertical line
@@ -1815,7 +2442,9 @@ GTCGACGCA</textarea
               button.textContent = "Computing...";
             } else {
               button.disabled = false;
-              button.textContent = button.dataset.originalText;
+              if (button.dataset.originalText) {
+                button.textContent = button.dataset.originalText;
+              }
             }
           },
         };
