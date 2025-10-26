@@ -1168,7 +1168,7 @@ GTCGACGCA</textarea
             // Sanitize: convert to uppercase and remove invalid characters
             const sanitizedValue = originalValue
               .toUpperCase()
-              .replace(/[^ATCG]/g, "");
+              .replace(/[^ATCGU]/g, "");
 
             if (originalValue !== sanitizedValue) {
               const diff = originalValue.length - sanitizedValue.length;
@@ -1178,7 +1178,7 @@ GTCGACGCA</textarea
               input.setSelectionRange(newCursorPos, newCursorPos);
 
               // Show warning message
-              this.showInputWarning(input, "Only A, T, C, G are allowed.");
+              this.showInputWarning(input, "Only A, T, C, G, U are allowed.");
             }
           },
 
